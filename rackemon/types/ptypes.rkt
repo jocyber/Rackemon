@@ -1,6 +1,6 @@
 #lang typed/racket/base
 
-(require racket/match) ; may require require/typed
+(require racket/match)
 
 (provide (all-defined-out))
 
