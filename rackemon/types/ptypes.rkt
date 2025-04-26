@@ -24,5 +24,3 @@
   ; TODO: logic goes here
   'SuperEffective)
 
-
-
