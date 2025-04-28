@@ -5,10 +5,9 @@
 
 ; provides a safe interface for the Raylib library
 ; https://www.raylib.com/cheatsheet/cheatsheet.html
-
 (provide (rename-out [InitWindow init-window]
                      [CloseWindow close-window]
-                     [WindowShouldClose close-window?]
+                     [WindowShouldClose window-should-close?]
                      [BeginDrawing begin-drawing]
                      [EndDrawing end-drawing]))
 
@@ -20,4 +19,19 @@
 (define-raylib BeginDrawing (_fun -> _void))
 (define-raylib EndDrawing (_fun -> _void))
 
-; introduce window opening abstraction similar to "call-with-input-file"
+(module* utils #f
+  (require (submod ".."))
+
+  (provide (all-defined-out))
+
+  (define (call-with-window width height title f) 
+    (init-window width height title)
+
+    (let loop ()
+      (unless (window-should-close?)
+        (begin-drawing)
+        (f)
+        (end-drawing)
+        (loop)))
+
+    (close-window)))
