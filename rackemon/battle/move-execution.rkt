@@ -17,6 +17,7 @@
 
 (require "./env.rkt"
          "../types/pmoves.rkt"
+         racket/undefined
          'results)
 
 (module+ test 
@@ -30,24 +31,51 @@
 ; specifies how a regular move should behave
 (define (default-execute-move 
           env
-          #:stat-diff [stat-diff (battle-stats 0 0 0 0 0)])
-  (let ([opposing-target (opposing-target env)])
+          #:stat-diff [stat-diff (battle-stats 0 0 0 0 0)]
+          #:invulnerable? [invulnerable? undefined]
+          #:recoil [recoil #f])
+  (let* ([opposing-target (opposing-target env)]
+         [current-target (current-target env)]
+         [chosen-move (entity-chosen-move current-target)])
     (cond [(entity-fainted? opposing-target) 'Failed]
-          )))
+          [(if (eq? invulnerable? undefined) 
+               (entity-invulnerable? opposing-target) 
+               invulnerable?)
+           'Missed]
+          [(eq? (pmove-category chosen-move) 'Status)
+           (status stat-diff opposing-target)]
+          [else (attack 2 ; damage
+                        100 ; accuracy
+                        'SuperEffective
+                        recoil)])))
+
+(module+ test 
+  (define-simple-check (check-failed? f env)
+    (check-eq? 'Failed (f env)))
+  (define-simple-check (check-missed? f env)
+    (check-eq? 'Missed (f env)))
+
+  (check-failed? default-execute-move (construct-battle-env #:enemy (construct-entity #:fainted? #t)))
+  (check-missed? default-execute-move (construct-battle-env #:enemy (construct-entity #:in-air? #t))))
 
 
 (define (execute-defense-curl env) (status (battle-stats 0 1 0 0 0) (current-target env)))
 
 (module+ test 
   (define execute-dc (compose1 execute-defense-curl construct-battle-env))
+  (define player-entity (construct-entity #:chosen-move defense-curl))
 
   (test-begin
-    (define player-entity (construct-entity #:chosen-move defense-curl))
     (define result (execute-dc #:player player-entity #:enemy (construct-entity #:fainted? #t)))
 
     (check-pred status? result)
     (check-eq? 1 (battle-stats-defense (status-stat-diff result)))
-    (check-equal? player-entity (status-target result))))
+    (check-equal? player-entity (status-target result)))
+
+  (test-begin
+    (define result (execute-dc #:player player-entity #:enemy (construct-entity #:underground? #t)))
+
+    (check-pred status? result)))
 
 
 (define (execute-sucker-punch env)
@@ -58,14 +86,10 @@
           [else (default-execute-move env)])))
 
 (module+ test
-  (define-simple-check (check-failed? env)
-    (check-eq? 'Failed (execute-sucker-punch env)))
-
-  (check-failed? (construct-battle-env #:enemy (construct-entity #:attacked? #t)))
-  (check-failed? (construct-battle-env #:enemy (construct-entity #:chosen-move defense-curl))))
+  (check-failed? execute-sucker-punch (construct-battle-env #:enemy (construct-entity #:attacked? #t)))
+  (check-failed? execute-sucker-punch 
+                 (construct-battle-env #:enemy (construct-entity #:chosen-move defense-curl))))
 
 
 (define execute-tackle default-execute-move)
-
-(module+ test)
 
