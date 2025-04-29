@@ -4,5 +4,5 @@
 
 (call-with-window
   500 500 "Hello from Racket"
-  (lambda () 
+  (lambda (dt) 
     (void)))

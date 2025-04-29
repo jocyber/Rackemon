@@ -9,15 +9,18 @@
                      [CloseWindow close-window]
                      [WindowShouldClose window-should-close?]
                      [BeginDrawing begin-drawing]
-                     [EndDrawing end-drawing]))
+                     [EndDrawing end-drawing]
+                     [GetFrameTime get-frame-time]))
 
-(define-ffi-definer define-raylib (ffi-lib "raylib"))
+; set raylib path in environment variable in Makefile with allowing of override
+(define-ffi-definer define-raylib (ffi-lib "/usr/lib/raylib/src/libraylib"))
 
 (define-raylib InitWindow (_fun _int _int _string -> _void))
 (define-raylib CloseWindow (_fun -> _void))
 (define-raylib WindowShouldClose (_fun -> _stdbool)) 
 (define-raylib BeginDrawing (_fun -> _void))
 (define-raylib EndDrawing (_fun -> _void))
+(define-raylib GetFrameTime (_fun -> _float))
 
 (module* utils #f
   (require (submod ".."))
@@ -30,7 +33,7 @@
     (let loop ()
       (unless (window-should-close?)
         (begin-drawing)
-        (f)
+        (f (get-frame-time))
         (end-drawing)
         (loop)))
 
