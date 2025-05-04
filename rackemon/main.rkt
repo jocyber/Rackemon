@@ -1,8 +1,18 @@
 #lang racket/base
 
-(require (submod "./raylib.rkt" utils))
+(module constants racket/base
+  (provide (all-defined-out))
 
-(call-with-window
-  500 500 "Hello from Racket"
-  (lambda (dt) 
-    (void)))
+  (define window-height 448)
+  (define window-width 960)
+  (define window-title "Pokemon"))
+
+
+(module+ main
+  (require (submod "./raylib.rkt" utils)
+           (submod ".." constants))
+
+  (call-with-window
+    window-width window-height window-title
+    (lambda (dt) 
+      (void))))
