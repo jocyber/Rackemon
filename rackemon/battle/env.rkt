@@ -28,7 +28,8 @@
    [special-attack  : Integer]
    [special-defense : Integer]
    [speed           : Integer])
-  #:mutable)
+  #:mutable
+  #:transparent)
 
 (struct entity
   ([attacked?               : Boolean]
@@ -41,7 +42,8 @@
    [chosen-move             : pmove]
    [physical-screen-active? : Boolean]
    [special-screen-active?  : Boolean])
-  #:mutable)
+  #:mutable
+  #:transparent)
 
 (: entity-invulnerable? (-> entity Boolean))
 (define (entity-invulnerable? e)
@@ -50,28 +52,26 @@
                entity-underwater? entity-vanished?)))
 
 
-(module* test-utils racket/base
-  (require (submod "..") "../types/pmoves.rkt")
-
+(module+ test-utils
   (provide (all-defined-out))
 
   (define (construct-entity 
-            #:attacked? [attacked? #f]
-            #:stats [stats (battle-stats 0 0 0 0 0)]
-            #:fainted? [fainted? #f]
-            #:in-air? [in-air? #f]
-            #:underground? [underground? #f]
-            #:underwater? [underwater? #f]
-            #:vanished? [vanished? #f]
-            #:chosen-move [chosen-move tackle]
-            #:physical-screen-active? [physical-screen-active? #f]
-            #:special-screen-active? [special-screen-active? #f])
+            #:attacked? [attacked? : Boolean #f]
+            #:stats [stats : battle-stats (battle-stats 0 0 0 0 0)]
+            #:fainted? [fainted? : Boolean #f]
+            #:in-air? [in-air? : Boolean #f]
+            #:underground? [underground? : Boolean #f]
+            #:underwater? [underwater? : Boolean #f]
+            #:vanished? [vanished? : Boolean #f]
+            #:chosen-move [chosen-move : pmove tackle]
+            #:physical-screen-active? [physical-screen-active? : Boolean #f]
+            #:special-screen-active? [special-screen-active? : Boolean #f])
     (entity attacked? stats 
             fainted? in-air? underground? underwater? vanished? 
             chosen-move physical-screen-active? special-screen-active?))
 
   (define (construct-battle-env 
-            #:enemy [enemy (construct-entity)]
-            #:player [player (construct-entity)]
-            #:players-turn? [players-turn? #t])
+            #:enemy [enemy : entity (construct-entity)]
+            #:player [player : entity (construct-entity)]
+            #:players-turn? [players-turn? : Boolean #t])
     (battle-env enemy player players-turn?)))

@@ -1,83 +1,80 @@
-#lang racket/base
-
-(module results typed/racket/base
-  (require "../types/ptypes.rkt"
-           "./env.rkt")
-
-  (provide (all-defined-out))
-
-  (struct attack 
-    ([damage        : Positive-Integer] 
-     [accuracy      : Nonnegative-Integer] 
-     [effectiveness : Effectiveness] 
-     [recoil        : (Option Positive-Integer)]))
-  (struct status 
-    ([stat-diff : battle-stats] 
-     [target    : entity])))
+#lang typed/racket/base
 
 (require "./env.rkt"
          "../types/pmoves.rkt"
-         racket/undefined
-         'results)
+         "../types/ptypes.rkt"
+         guard
+         )
 
 (module+ test 
-  (require rackunit
+  (require typed/rackunit 
+           racket/match
            racket/function
            (submod "./env.rkt" test-utils)))
 
 (provide (except-out (all-defined-out) default-execute-move))
 
+(define-type Move-Execution-Result (U attack status 'Failed 'Missed))
+
+(struct attack 
+  ([damage        : Positive-Integer] 
+   [accuracy      : Nonnegative-Integer] 
+   [effectiveness : Effectiveness] 
+   [recoil        : Nonnegative-Integer]))
+(struct status 
+  ([stat-diff : battle-stats] 
+   [target    : entity]))
 
 ; specifies how a regular move should behave
 (define (default-execute-move 
-          env
-          #:stat-diff [stat-diff (battle-stats 0 0 0 0 0)]
-          #:invulnerable? [invulnerable? undefined]
-          #:recoil [recoil #f])
+          [env : battle-env]
+          #:stat-diff [stat-diff : battle-stats (battle-stats 0 0 0 0 0)]
+          #:invulnerable? [invulnerable? : Boolean #f]
+          #:recoil [recoil : (Option Positive-Integer) #f])
   (let* ([opposing-target (opposing-target env)]
          [current-target (current-target env)]
          [chosen-move (entity-chosen-move current-target)])
-    (cond [(entity-fainted? opposing-target) 'Failed]
-          [(if (eq? invulnerable? undefined) 
-               (entity-invulnerable? opposing-target) 
-               invulnerable?)
-           'Missed]
-          [(eq? (pmove-category chosen-move) 'Status)
-           (status stat-diff opposing-target)]
-          [else (attack 2 ; damage
-                        100 ; accuracy
-                        'SuperEffective
-                        recoil)])))
+    (guarded-block
+      (guard (not (entity-fainted? opposing-target)) #:else 'Failed)
+      (guard (not (or invulnerable? (entity-invulnerable? opposing-target))) #:else 'Missed)
+      (guard (not (eq? (pmove-category chosen-move) 'Status)) #:else (status stat-diff opposing-target))
 
-(module+ test 
-  (define-simple-check (check-failed? f env)
-    (check-eq? 'Failed (f env)))
-  (define-simple-check (check-missed? f env)
-    (check-eq? 'Missed (f env)))
+      (attack 2 100 'SuperEffective (or recoil 0)))))
 
-  (check-failed? default-execute-move (construct-battle-env #:enemy (construct-entity #:fainted? #t)))
-  (check-missed? default-execute-move (construct-battle-env #:enemy (construct-entity #:in-air? #t))))
+(module+ test
+  (define check-failed? (curry check-eq? 'Failed))
+  (define check-missed? (curry check-eq? 'Missed))
+
+  (check-failed? (default-execute-move (construct-battle-env #:enemy (construct-entity #:fainted? #t))))
+  (check-missed? (default-execute-move (construct-battle-env #:enemy (construct-entity #:in-air? #t)))))
 
 
+(: execute-defense-curl (-> battle-env Move-Execution-Result))
 (define (execute-defense-curl env) (status (battle-stats 0 1 0 0 0) (current-target env)))
 
 (module+ test 
-  (define execute-dc (compose1 execute-defense-curl construct-battle-env))
   (define player-entity (construct-entity #:chosen-move defense-curl))
 
   (test-begin
-    (define result (execute-dc #:player player-entity #:enemy (construct-entity #:fainted? #t)))
+    (define result (execute-defense-curl (construct-battle-env #:player player-entity #:enemy (construct-entity #:fainted? #t))))
 
     (check-pred status? result)
-    (check-eq? 1 (battle-stats-defense (status-stat-diff result)))
-    (check-equal? player-entity (status-target result)))
+    (check-eq? 1 (battle-stats-defense 
+                   (match result 
+                     [(status diff _) diff]
+                     [_ (error "Not a status type")])))
+    (check-equal? player-entity 
+                    (match result 
+                      [(status _ target) target]
+                      [_ (error "Not pokemon target")])))
 
   (test-begin
-    (define result (execute-dc #:player player-entity #:enemy (construct-entity #:underground? #t)))
+    (define result (execute-defense-curl (construct-battle-env #:player player-entity #:enemy (construct-entity #:underground? #t))))
 
     (check-pred status? result)))
 
 
+(: execute-sucker-punch (-> battle-env Move-Execution-Result))
 (define (execute-sucker-punch env)
   (let ([opposing-target (opposing-target env)])
     (cond [(or (entity-attacked? opposing-target)
@@ -86,10 +83,11 @@
           [else (default-execute-move env)])))
 
 (module+ test
-  (check-failed? execute-sucker-punch (construct-battle-env #:enemy (construct-entity #:attacked? #t)))
-  (check-failed? execute-sucker-punch 
-                 (construct-battle-env #:enemy (construct-entity #:chosen-move defense-curl))))
+  (check-failed? (execute-sucker-punch (construct-battle-env #:enemy (construct-entity #:attacked? #t))))
+  (check-failed? (execute-sucker-punch 
+                   (construct-battle-env #:enemy (construct-entity #:chosen-move defense-curl)))))
 
 
+(: execute-tackle (-> battle-env Move-Execution-Result))
 (define execute-tackle default-execute-move)
 

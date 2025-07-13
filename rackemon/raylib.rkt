@@ -6,22 +6,22 @@
 
   (provide (all-defined-out))
 
-  (define-cstruct _Image
+  (define-cstruct _image
     ([data _pointer]
      [width _int]
      [height _int]
      [mipmaps _int]
      [format _int]))
 
-  (define-cstruct _Texture2D
+  (define-cstruct _texture2D
     ([id _uint]
      [width _int]
      [height _int]
      [mipmaps _int]
      [format _int]))
 
-  (define-cstruct _Color ([r _ubyte] [g _ubyte] [b _ubyte] [a _ubyte]))
-  (define-cstruct _Vector2 ([x _float] [y _float])))
+  (define-cstruct _color ([r _ubyte] [g _ubyte] [b _ubyte] [a _ubyte]))
+  (define-cstruct _vector2 ([x _float] [y _float])))
 
 
 (require ffi/unsafe
@@ -54,40 +54,38 @@
 (define-raylib BeginDrawing (_fun -> _void))
 (define-raylib EndDrawing (_fun -> _void))
 (define-raylib GetFrameTime (_fun -> _float))
-(define-raylib LoadImage (_fun _string -> _Image))
-(define-raylib UnloadImage (_fun _Image -> _void))
-(define-raylib LoadTextureFromImage (_fun _Image -> _Texture2D))
-(define-raylib DrawTexture (_fun _Texture2D _int _int _Color -> _void))
-(define-raylib ClearBackground (_fun _Color -> _void))
-(define-raylib UnloadTexture (_fun _Texture2D -> _void))
-(define-raylib DrawTextureEx (_fun _Texture2D _Vector2 _float _float _Color -> _void))
+(define-raylib LoadImage (_fun _string -> _image))
+(define-raylib UnloadImage (_fun _image -> _void))
+(define-raylib LoadTextureFromImage (_fun _image -> _texture2D))
+(define-raylib DrawTexture (_fun _texture2D _int _int _color -> _void))
+(define-raylib ClearBackground (_fun _color -> _void))
+(define-raylib UnloadTexture (_fun _texture2D -> _void))
+(define-raylib DrawTextureEx (_fun _texture2D _vector2 _float _float _color -> _void))
 
 (module+ colors
   (require (submod ".." structs))
 
   (provide (all-defined-out))
 
-  (define WHITE (make-Color 255 255 255 255)))
+  (define WHITE (make-color 255 255 255 255)))
 
 (module* utils #f
   (require (submod ".."))
 
   (provide (all-defined-out))
 
-  ; should be a macro to avoid creating textures before the window is ready
-  (define (call-with-window width height title f [clean-up #f]) 
-    ; take in variadic number of textures, init them after init-window call, then clean them up before 
-    ; close window
+  (define (call-with-window width height title f . paths)
     (init-window width height title)
+    (define textures (map load-sprite paths))
 
     (let loop ()
       (unless (window-should-close?)
         (begin-drawing)
-        (f (get-frame-time))
+        (apply f (get-frame-time) textures)
         (end-drawing)
         (loop)))
 
-    (when clean-up (clean-up))
+    (for-each unload-texture textures)
     (close-window))
 
   (define (load-sprite path)
