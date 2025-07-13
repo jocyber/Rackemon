@@ -6,7 +6,7 @@
          (submod "../raylib.rkt" structs))
 
 (module+ main
-  (require (submod "./env.rkt" test-utils)
+  (require (submod "./types.rkt" test-utils)
            "../window.rkt")
 
   (call-with-window
