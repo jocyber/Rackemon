@@ -4,3 +4,6 @@ test:
 
 run: 
 	racket rackemon/main.rkt
+
+battle: 
+	racket rackemon/battle/display.rkt

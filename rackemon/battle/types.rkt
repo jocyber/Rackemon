@@ -2,12 +2,13 @@
 
 (provide (all-defined-out))
 
+(require "./pmoves.rkt")
+
 (struct battle-env
   ([enemy         : entity]
    [player        : entity]
    [players-turn? : Boolean])
-   #:mutable
-   #:transparent)
+   #:mutable)
 
 (: opposing-target (-> battle-env entity))
 (define (opposing-target env)
@@ -27,8 +28,7 @@
    [special-attack  : Integer]
    [special-defense : Integer]
    [speed           : Integer])
-  #:mutable
-  #:transparent)
+  #:mutable)
 
 (struct entity
   ([attacked?               : Boolean]
@@ -41,44 +41,7 @@
    [chosen-move             : pmove]
    [physical-screen-active? : Boolean]
    [special-screen-active?  : Boolean])
-  #:mutable
-  #:transparent)
-
-(define-type Move-Execution-Result (U attack status 'Failed 'Missed))
-
-(struct attack 
-  ([damage        : Positive-Integer] 
-   [accuracy      : Nonnegative-Integer] 
-   [effectiveness : Effectiveness] 
-   [recoil        : Nonnegative-Integer]) #:transparent)
-(struct status 
-  ([stat-diff : battle-stats] 
-   [target    : entity]) #:transparent)
-
-
-(define-type Pokemon-Type 
-  (U 'Fire 'Water 'Grass 'Electric 'Dragon 'Bug 'Dark 'Steel 'Psychic
-     'Ground 'Fairy 'Fighting 'Flying 'Ghost 'Poison 'Rock 'Ice 'Normal))
-
-(define-type Effectiveness
-  (U 'SuperEffective 'NormallyEffective 'NotVeryEffective 'NotEffective))
-
-(define-type Category (U 'Physical 'Special 'Status))
-
-(struct pmove
-  ([name     : Symbol]
-   [bp       : (Option Positive-Integer)]
-   [pp       : Positive-Integer]
-   [accuracy : (Option Positive-Integer)]
-   [contact? : Boolean]
-   [type     : (Option Pokemon-Type)]
-   [category : Category]
-   [priority : Nonnegative-Integer]
-   [turns    : Positive-Integer]
-   [execute  : (-> battle-env Move-Execution-Result)]
-   )
-  #:transparent)
-
+  #:mutable)
 
 (: entity-invulnerable? (-> entity Boolean))
 (define (entity-invulnerable? e)
@@ -91,17 +54,22 @@
   (provide (all-defined-out))
 
   (define (construct-entity 
-            #:attacked? [attacked? : Boolean #f]
-            #:stats [stats : battle-stats (battle-stats 0 0 0 0 0)]
-            #:fainted? [fainted? : Boolean #f]
-            #:in-air? [in-air? : Boolean #f]
-            #:underground? [underground? : Boolean #f]
-            #:underwater? [underwater? : Boolean #f]
-            #:vanished? [vanished? : Boolean #f]
-            #:chosen-move [chosen-move : pmove]
-            #:physical-screen-active? [physical-screen-active? : Boolean #f]
-            #:special-screen-active? [special-screen-active? : Boolean #f])
+            #:attacked? [attacked? #f]
+            #:stats [stats (battle-stats 0 0 0 0 0)]
+            #:fainted? [fainted? #f]
+            #:in-air? [in-air? #f]
+            #:underground? [underground? #f]
+            #:underwater? [underwater? #f]
+            #:vanished? [vanished? #f]
+            #:chosen-move [chosen-move tackle]
+            #:physical-screen-active? [physical-screen-active? #f]
+            #:special-screen-active? [special-screen-active? #f])
     (entity attacked? stats 
             fainted? in-air? underground? underwater? vanished? 
             chosen-move physical-screen-active? special-screen-active?))
-  )
+
+  (define (construct-battle-env 
+            #:enemy [enemy (construct-entity)]
+            #:player [player (construct-entity)]
+            #:players-turn? [players-turn? #t])
+    (battle-env enemy player players-turn?)))

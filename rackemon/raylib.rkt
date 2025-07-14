@@ -20,6 +20,12 @@
      [mipmaps _int]
      [format _int]))
 
+  (define-cstruct _rect
+    ([x _float]
+     [y _float]
+     [width _float]
+     [height _float]))
+
   (define-cstruct _color ([r _ubyte] [g _ubyte] [b _ubyte] [a _ubyte]))
   (define-cstruct _vector2 ([x _float] [y _float])))
 
@@ -43,6 +49,7 @@
                      [UnloadTexture unload-texture]
                      [ClearBackground clear-background]
                      [DrawTextureEx draw-texture-ex]
+                     [DrawTexturePro draw-texture-pro]
                      ))
 
 ; set raylib path in environment variable in Makefile with allowing of override
@@ -61,6 +68,7 @@
 (define-raylib ClearBackground (_fun _color -> _void))
 (define-raylib UnloadTexture (_fun _texture2D -> _void))
 (define-raylib DrawTextureEx (_fun _texture2D _vector2 _float _float _color -> _void))
+(define-raylib DrawTexturePro (_fun _texture2D _rect _rect _vector2 _float _color -> _void))
 
 (module+ colors
   (require (submod ".." structs))
@@ -74,16 +82,18 @@
 
   (provide (all-defined-out))
 
-  (define (call-with-window width height title f . paths)
+  (define (call-with-window width height title initial-state f . paths)
     (init-window width height title)
     (define textures (map load-sprite paths))
 
-    (let loop ()
+    (let loop ([state initial-state] [dt (get-frame-time)])
       (unless (window-should-close?)
         (begin-drawing)
-        (apply f (get-frame-time) textures)
+
+        (define-values (new-dt new-state) (apply f dt state textures))
+
         (end-drawing)
-        (loop)))
+        (loop new-state (+ new-dt (get-frame-time)))))
 
     (for-each unload-texture textures)
     (close-window))
