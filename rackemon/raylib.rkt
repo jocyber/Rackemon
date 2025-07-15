@@ -52,8 +52,21 @@
                      [DrawTexturePro draw-texture-pro]
                      ))
 
-; set raylib path in environment variable in Makefile with allowing of override
-(define-ffi-definer define-raylib (ffi-lib "/usr/lib/raylib/src/libraylib"))
+(define default-path "/usr/local/lib/raylib/src/libraylib")
+(define raylib-path 
+  (or (getenv "RAYLIB_PATH") 
+      (begin
+        (displayln (format "RAYLIB_PATH environment variable is not defined. Defaulting to ~a" 
+                           default-path))
+        default-path)))
+
+(define-ffi-definer 
+  define-raylib 
+  (with-handlers ([exn:fail?
+                    (lambda (e) 
+                      (raise-user-error 
+                        (format "Raylib static library not found at location: ~a" raylib-path)))])
+    (ffi-lib raylib-path)))
 
 (define-raylib InitWindow (_fun _int _int _string -> _void))
 (define-raylib CloseWindow (_fun -> _void))
