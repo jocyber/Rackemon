@@ -77,8 +77,9 @@
 
   (test-case "sucker punch tests"
     (define execute-sp (pmove-execute sucker-punch))
+    (define player (construct-entity #:chosen-move tackle))
 
-    (check-failed? execute-sp (construct-battle-env #:enemy (construct-entity #:chosen-move sucker-punch #:attacked? #t)))
-    (check-pred attack? (execute-sp (construct-battle-env #:enemy (construct-entity #:chosen-move sucker-punch)))))
+    (check-failed? execute-sp (construct-battle-env #:enemy (construct-entity #:chosen-move sucker-punch #:attacked? #t) #:player player))
+    (check-pred attack? (execute-sp (construct-battle-env #:enemy (construct-entity #:chosen-move sucker-punch) #:player player)))
   )
 

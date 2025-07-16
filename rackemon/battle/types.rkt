@@ -2,13 +2,25 @@
 
 (provide (all-defined-out))
 
-(require "./pmoves.rkt")
+(define-type Move-Category (U 'Physical 'Special 'Status))
 
 (struct battle-env
   ([enemy         : entity]
    [player        : entity]
    [players-turn? : Boolean])
    #:mutable)
+
+(struct pmove
+  ([name     : Symbol]
+   [bp       : (Option Positive-Integer)]
+   [pp       : Positive-Integer]
+   [accuracy : (Option Positive-Integer)]
+   [contact? : Boolean]
+   ;[type     : (Option Pokemon-Type)]
+   [category : Move-Category]
+   [priority : Integer]
+   [turns    : Positive-Integer])
+  #:transparent)
 
 (: opposing-target (-> battle-env entity))
 (define (opposing-target env)
@@ -39,9 +51,11 @@
    [underwater?             : Boolean]
    [vanished?               : Boolean]
    [chosen-move             : pmove]
+   [move-history            : (Listof pmove)]
    [physical-screen-active? : Boolean]
    [special-screen-active?  : Boolean])
   #:mutable)
+
 
 (: entity-invulnerable? (-> entity Boolean))
 (define (entity-invulnerable? e)
@@ -50,7 +64,9 @@
                entity-underwater? entity-vanished?)))
 
 
-(module+ test-utils
+(module* test-utils racket/base
+  (require (submod ".."))
+
   (provide (all-defined-out))
 
   (define (construct-entity 
@@ -61,15 +77,16 @@
             #:underground? [underground? #f]
             #:underwater? [underwater? #f]
             #:vanished? [vanished? #f]
-            #:chosen-move [chosen-move tackle]
+            #:chosen-move chosen-move
+            #:move-history [move-history '()]
             #:physical-screen-active? [physical-screen-active? #f]
             #:special-screen-active? [special-screen-active? #f])
     (entity attacked? stats 
             fainted? in-air? underground? underwater? vanished? 
-            chosen-move physical-screen-active? special-screen-active?))
+            chosen-move move-history physical-screen-active? special-screen-active?))
 
   (define (construct-battle-env 
-            #:enemy [enemy (construct-entity)]
-            #:player [player (construct-entity)]
+            #:enemy enemy
+            #:player player
             #:players-turn? [players-turn? #t])
     (battle-env enemy player players-turn?)))

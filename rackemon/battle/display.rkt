@@ -19,7 +19,7 @@
   (draw-texture-pro 
     texture 
     (make-rect (battle-state-enemy-frame-offset state) 0. width height) 
-    (make-rect (- window-width 340.) 140. (* width 3.) (* height 3.))
+    (make-rect (- window-width 335.) 140. (* width 3.) (* height 3.))
     (make-vector2 0. 0.) 
     0. WHITE))
 
