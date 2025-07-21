@@ -82,4 +82,5 @@
     (check-failed? execute-sp (construct-battle-env #:enemy (construct-entity #:chosen-move sucker-punch #:attacked? #t) #:player player))
     (check-pred attack? (execute-sp (construct-battle-env #:enemy (construct-entity #:chosen-move sucker-punch) #:player player)))
   )
+  )
 
