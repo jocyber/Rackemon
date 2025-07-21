@@ -52,6 +52,7 @@
                      [ClearBackground clear-background]
                      [DrawTextureEx draw-texture-ex]
                      [DrawTexturePro draw-texture-pro]
+                     [SetTargetFPS set-target-fps]
                      ))
 
 (define default-path 
@@ -88,6 +89,7 @@
 (define-raylib UnloadTexture (_fun _texture2D -> _void))
 (define-raylib DrawTextureEx (_fun _texture2D _vector2 _float _float _color -> _void))
 (define-raylib DrawTexturePro (_fun _texture2D _rect _rect _vector2 _float _color -> _void))
+(define-raylib SetTargetFPS (_fun _int -> _void))
 
 (module+ colors
   (require (submod ".." structs))

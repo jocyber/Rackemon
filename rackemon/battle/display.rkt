@@ -53,6 +53,8 @@
   (values new-dt new-state))
 
 (module+ main
+  (set-target-fps 60)
+
   (call-with-window
     window-width window-height window-title
     (battle-state 0.)
