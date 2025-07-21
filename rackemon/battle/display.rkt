@@ -16,6 +16,14 @@
     ))
 
 (define (display-enemy texture width height state)
+  ; draw the enemies shadow
+  (draw-texture-pro 
+    texture 
+    (make-rect (battle-state-enemy-frame-offset state) 0. width height) 
+    (make-rect (- window-width 335.) 200. (* width 3.) (* height 1.5))
+    (make-vector2 0. 0.) 
+    0. (make-color 0 0 0 110))
+  ; draw enemy animation
   (draw-texture-pro 
     texture 
     (make-rect (battle-state-enemy-frame-offset state) 0. width height) 

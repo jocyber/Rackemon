@@ -54,13 +54,10 @@
                      [DrawTexturePro draw-texture-pro]
                      ))
 
-(define clean-path->string 
-  (compose1 path->string simplify-path cleanse-path))
-
 (define default-path 
   (match (system-type 'os)
     ['unix "/usr/local/lib/raylib/src/libraylib"]
-    ['macosx (clean-path->string (build-path (getenv "HOMEBREW_CELLAR") "raylib" "5.5" "lib" "libraylib"))]
+    ['macosx (path->string (build-path (getenv "HOMEBREW_CELLAR") "raylib" "5.5" "lib" "libraylib"))]
     [_ (error "Platform is not supported")]))
 
 (define raylib-path 
