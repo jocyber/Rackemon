@@ -1,5 +1,7 @@
 #lang racket/base
 
+(require racket/match)
+
 (module structs racket/base
   (require ffi/unsafe 
            ffi/unsafe/define)
@@ -52,12 +54,19 @@
                      [DrawTexturePro draw-texture-pro]
                      ))
 
-(define default-path "/usr/local/lib/raylib/src/libraylib")
+(define clean-path->string 
+  (compose1 path->string simplify-path cleanse-path))
+
+(define default-path 
+  (match (system-type 'os)
+    ['unix "/usr/local/lib/raylib/src/libraylib"]
+    ['macosx (clean-path->string (build-path (getenv "HOMEBREW_CELLAR") "raylib" "5.5" "lib" "libraylib"))]
+    [_ (error "Platform is not supported")]))
+
 (define raylib-path 
   (or (getenv "RAYLIB_PATH") 
       (begin
-        (displayln (format "RAYLIB_PATH environment variable is not defined. Defaulting to ~a" 
-                           default-path))
+        (displayln (format "RAYLIB_PATH environment variable is not defined. Defaulting to ~a" default-path))
         default-path)))
 
 (define-ffi-definer 
@@ -65,7 +74,7 @@
   (with-handlers ([exn:fail?
                     (lambda (e) 
                       (raise-user-error 
-                        (format "Raylib static library not found at location: ~a" raylib-path)))])
+                        (format "Raylib library not found at location: ~a" raylib-path)))])
     (ffi-lib raylib-path)))
 
 (define-raylib InitWindow (_fun _int _int _string -> _void))
