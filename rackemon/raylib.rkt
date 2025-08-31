@@ -55,25 +55,26 @@
                      [SetTargetFPS set-target-fps]
                      ))
 
-(define default-path 
+(define (default-path)
   (match (system-type 'os)
     ['unix "/usr/local/lib/raylib/src/libraylib"]
     ['macosx (path->string (build-path (getenv "HOMEBREW_CELLAR") "raylib" "5.5" "lib" "libraylib"))]
     [_ (error "Platform is not supported")]))
 
-(define raylib-path 
+(define (raylib-path)
   (or (getenv "RAYLIB_PATH") 
-      (begin
-        (displayln (format "RAYLIB_PATH environment variable is not defined. Defaulting to ~a" default-path))
-        default-path)))
+      (let ([path (default-path)])
+        (displayln (format "RAYLIB_PATH environment variable is not defined. Defaulting to ~a" path))
+        path)))
 
 (define-ffi-definer 
   define-raylib 
-  (with-handlers ([exn:fail?
-                    (lambda (e) 
-                      (raise-user-error 
-                        (format "Raylib library not found at location: ~a" raylib-path)))])
-    (ffi-lib raylib-path)))
+  (let ([path (raylib-path)])
+    (with-handlers ([exn:fail?
+                      (lambda (e) 
+                        (raise-user-error 
+                          (format "Raylib library not found at location: ~a" path)))])
+      (ffi-lib path))))
 
 (define-raylib InitWindow (_fun _int _int _string -> _void))
 (define-raylib CloseWindow (_fun -> _void))

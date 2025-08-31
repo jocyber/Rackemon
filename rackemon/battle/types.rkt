@@ -3,6 +3,45 @@
 (provide (all-defined-out))
 
 (define-type Move-Category (U 'Physical 'Special 'Status))
+(define-type Move-Execution-Result (U attack status 'Failed 'Missed))
+(define-type Pokemon-Type 
+  (U 'Fire 'Water 'Grass 'Electric 'Dragon 'Bug 'Dark 'Steel 'Psychic
+     'Ground 'Fairy 'Fighting 'Flying 'Ghost 'Poison 'Rock 'Ice 'Normal))
+(define-type Effectiveness
+  (U 'SuperEffective 'NormallyEffective 'NotVeryEffective 'NotEffective))
+
+(struct battle-stats
+  ([attack          : Integer]
+   [defense         : Integer]
+   [special-attack  : Integer]
+   [special-defense : Integer]
+   [speed           : Integer])
+  #:mutable
+  #:transparent)
+
+(struct entity
+  ([attacked?               : Boolean]
+   [stats                   : battle-stats]
+   [fainted?                : Boolean]
+   [in-air?                 : Boolean]
+   [underground?            : Boolean]
+   [underwater?             : Boolean]
+   [vanished?               : Boolean]
+   [chosen-move             : pmove]
+   [move-history            : (Listof pmove)]
+   [physical-screen-active? : Boolean]
+   [special-screen-active?  : Boolean])
+  #:mutable
+  #:transparent)
+
+(struct attack 
+  ([damage        : Positive-Integer] 
+   [accuracy      : Nonnegative-Integer] 
+   [effectiveness : Effectiveness] 
+   [recoil        : Nonnegative-Integer]) #:transparent)
+(struct status 
+  ([stat-diff : battle-stats] 
+   [target    : entity]) #:transparent)
 
 (struct battle-env
   ([enemy         : entity]
@@ -16,10 +55,11 @@
    [pp       : Positive-Integer]
    [accuracy : (Option Positive-Integer)]
    [contact? : Boolean]
-   ;[type     : (Option Pokemon-Type)]
+   [type     : (Option Pokemon-Type)]
    [category : Move-Category]
    [priority : Integer]
-   [turns    : Positive-Integer])
+   [turns    : Positive-Integer]
+   [execute  : (battle-env -> Move-Execution-Result)])
   #:transparent)
 
 (: opposing-target (-> battle-env entity))
@@ -34,29 +74,6 @@
       (battle-env-player env) 
       (battle-env-enemy env)))
 
-(struct battle-stats
-  ([attack          : Integer]
-   [defense         : Integer]
-   [special-attack  : Integer]
-   [special-defense : Integer]
-   [speed           : Integer])
-  #:mutable)
-
-(struct entity
-  ([attacked?               : Boolean]
-   [stats                   : battle-stats]
-   [fainted?                : Boolean]
-   [in-air?                 : Boolean]
-   [underground?            : Boolean]
-   [underwater?             : Boolean]
-   [vanished?               : Boolean]
-   [chosen-move             : pmove]
-   [move-history            : (Listof pmove)]
-   [physical-screen-active? : Boolean]
-   [special-screen-active?  : Boolean])
-  #:mutable)
-
-
 (: entity-invulnerable? (-> entity Boolean))
 (define (entity-invulnerable? e)
   (ormap (lambda ([f : (-> entity Boolean)]) (f e))
@@ -64,29 +81,28 @@
                entity-underwater? entity-vanished?)))
 
 
-(module* test-utils racket/base
-  (require (submod ".."))
-
+(module+ test-utils
   (provide (all-defined-out))
 
   (define (construct-entity 
-            #:attacked? [attacked? #f]
-            #:stats [stats (battle-stats 0 0 0 0 0)]
-            #:fainted? [fainted? #f]
-            #:in-air? [in-air? #f]
-            #:underground? [underground? #f]
-            #:underwater? [underwater? #f]
-            #:vanished? [vanished? #f]
-            #:chosen-move chosen-move
-            #:move-history [move-history '()]
-            #:physical-screen-active? [physical-screen-active? #f]
-            #:special-screen-active? [special-screen-active? #f])
+            #:attacked? [attacked? : Boolean #f]
+            #:stats [stats : battle-stats (battle-stats 0 0 0 0 0)]
+            #:fainted? [fainted? : Boolean #f]
+            #:in-air? [in-air? : Boolean #f]
+            #:underground? [underground? : Boolean #f]
+            #:underwater? [underwater? : Boolean #f]
+            #:vanished? [vanished? : Boolean #f]
+            #:chosen-move [chosen-move : pmove]
+            #:move-history [move-history : (Listof pmove) '()]
+            #:physical-screen-active? [physical-screen-active? : Boolean #f]
+            #:special-screen-active? [special-screen-active? : Boolean #f])
     (entity attacked? stats 
             fainted? in-air? underground? underwater? vanished? 
             chosen-move move-history physical-screen-active? special-screen-active?))
 
   (define (construct-battle-env 
-            #:enemy enemy
-            #:player player
-            #:players-turn? [players-turn? #t])
+            #:enemy [enemy : entity]
+            #:player [player : entity]
+            #:players-turn? [players-turn? : Boolean #t])
     (battle-env enemy player players-turn?)))
+
