@@ -20,11 +20,10 @@
 
     (define execute-dc (pmove-execute defense-curl))
     (define player-entity (construct-entity #:chosen-move defense-curl))
-    (define enemy-entity (construct-entity #:chosen-move defense-curl))
 
-    (check-pred status? (execute-dc (construct-battle-env #:player player-entity #:enemy enemy-entity)))
+    (check-pred status? (execute-dc (construct-battle-env #:player player-entity)))
     (test-equal? "It can still be executed when the enemy has fainted"
-                 (execute-dc (construct-battle-env #:player player-entity #:enemy (construct-entity #:chosen-move defense-curl #:fainted? #t)))
+                 (execute-dc (construct-battle-env #:player player-entity #:enemy (construct-entity #:fainted? #t)))
                  (status (battle-stats 0 1 0 0 0) player-entity))))
              
 
@@ -35,13 +34,15 @@
     "sucker punch tests"
 
     (define execute-sp (pmove-execute sucker-punch))
-    (define player-entity (construct-entity #:chosen-move sucker-punch))
 
     (test-eq? "It should fail if the enemy already attacked"
-              (execute-sp (construct-battle-env #:player player-entity #:enemy (construct-entity #:chosen-move tackle #:attacked? #t)))
+              (execute-sp (construct-battle-env #:enemy (construct-entity #:chosen-move tackle #:attacked? #t)))
               'Failed)
     (test-eq? "It should fail if the enemy chose a non-attacking move"
-              (execute-sp (construct-battle-env #:player player-entity #:enemy (construct-entity #:chosen-move defense-curl)))
+              (execute-sp (construct-battle-env #:enemy (construct-entity #:chosen-move defense-curl)))
               'Failed)
-    (check-pred attack? (execute-sp (construct-battle-env #:player player-entity #:enemy (construct-entity #:chosen-move tackle))))))
+    (check-pred attack? (execute-sp (construct-battle-env #:enemy (construct-entity #:chosen-move tackle))))
+    (test-pred "It should pass if the enemy does not have a chosen move" 
+               attack? (execute-sp (construct-battle-env #:enemy (construct-entity))))
+    ))
 

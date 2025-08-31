@@ -27,7 +27,7 @@
    [underground?            : Boolean]
    [underwater?             : Boolean]
    [vanished?               : Boolean]
-   [chosen-move             : pmove]
+   [chosen-move             : (Option pmove)]
    [move-history            : (Listof pmove)]
    [physical-screen-active? : Boolean]
    [special-screen-active?  : Boolean])
@@ -92,7 +92,7 @@
             #:underground? [underground? : Boolean #f]
             #:underwater? [underwater? : Boolean #f]
             #:vanished? [vanished? : Boolean #f]
-            #:chosen-move [chosen-move : pmove]
+            #:chosen-move [chosen-move : (Option pmove) #f]
             #:move-history [move-history : (Listof pmove) '()]
             #:physical-screen-active? [physical-screen-active? : Boolean #f]
             #:special-screen-active? [special-screen-active? : Boolean #f])
@@ -101,8 +101,8 @@
             chosen-move move-history physical-screen-active? special-screen-active?))
 
   (define (construct-battle-env 
-            #:enemy [enemy : entity]
-            #:player [player : entity]
+            #:enemy [enemy : entity (construct-entity)]
+            #:player [player : entity (construct-entity)]
             #:players-turn? [players-turn? : Boolean #t])
     (battle-env enemy player players-turn?)))
 
