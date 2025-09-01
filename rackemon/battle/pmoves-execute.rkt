@@ -3,6 +3,7 @@
 (require "./types.rkt"
          guard 
          racket/bool 
+         racket/list
          )
 (require/typed racket/base
                [in-inclusive-range (-> Real Real (Sequenceof Real))])
@@ -48,11 +49,15 @@
 
 (: execute-bullet-seed (-> battle-env Move-Execution-Result))
 (define (execute-bullet-seed env)
-  (append 
-    (default-execute-move env)
+  (define hit-attempts
     (flatten
       (for/list : (Listof Move-Execution-Result)
                 ([hit    (in-inclusive-range 2 (random 2 6))]
                  [chance (in-list (list 3/8 3/8 1/8 1/8))])
-        (default-execute-move env #:accuracy chance)))))
+        (default-execute-move env #:accuracy chance))))
+  (define-values (hits misses) (splitf-at hit-attempts attack?))
+
+  (append (default-execute-move env)
+          hits 
+          (if (empty? misses) '() (take misses 1))))
       

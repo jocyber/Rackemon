@@ -93,8 +93,12 @@
                   [res2 (in-list (cdr l))]) : Boolean
           (assert res1 attack?)
           (assert res2 attack?)
-          
+ 
           (>= (attack-accuracy res1) (attack-accuracy res2))))
       result)
+
+    (define result2 (execute-bs (construct-battle-env #:player (construct-entity #:chosen-move bullet-seed)
+                                                      #:enemy (construct-entity #:invulnerable? #t))))
+    (test-equal? "It stops upon reaching a miss" result2 '(Missed))
     ))
 
