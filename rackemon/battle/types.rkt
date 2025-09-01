@@ -2,17 +2,17 @@
 
 (provide (all-defined-out))
 
-(define-type Move-Category (U 'Physical 'Special 'Status))
-
 (define-type Move-Info (U attack status 'Failed 'Missed))
 (define-type Execution-Info (Pairof battle-env Move-Info))
 (define-type Move-Execution-Result (Listof Execution-Info))
 
+(define-type Move-Category (U 'Physical 'Special 'Status))
 (define-type Pokemon-Type 
   (U 'Fire 'Water 'Grass 'Electric 'Dragon 'Bug 'Dark 'Steel 'Psychic
      'Ground 'Fairy 'Fighting 'Flying 'Ghost 'Poison 'Rock 'Ice 'Normal))
 (define-type Effectiveness
   (U 'SuperEffective 'NormallyEffective 'NotVeryEffective 'NotEffective))
+
 (define-type Accuracy (U Exact-Rational +inf.0))
 (define-type Turns (U Positive-Integer (Pairof Positive-Integer Positive-Integer)))
 

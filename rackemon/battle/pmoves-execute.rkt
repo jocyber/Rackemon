@@ -4,11 +4,8 @@
          guard 
          racket/bool 
          racket/list
+         racket/match
          )
-(require/typed racket/base
-               [in-inclusive-range (-> Real Real (Sequenceof Real))])
-(require/typed racket/list
-               [flatten (All (A) (-> (Listof (Listof A)) (Listof A)))])
 
 (provide (except-out (all-defined-out) default-execute-move))
 
@@ -49,15 +46,14 @@
 
 (: execute-bullet-seed (-> battle-env Move-Execution-Result))
 (define (execute-bullet-seed env)
-  (define hit-attempts
-    (flatten
-      (for/list : (Listof Move-Execution-Result)
-                ([hit    (in-inclusive-range 2 (random 2 6))]
-                 [chance (in-list (list 3/8 3/8 1/8 1/8))])
-        (default-execute-move env #:accuracy chance))))
-  (define-values (hits misses) (splitf-at hit-attempts attack?))
+  (let loop ([chance : (Listof Exact-Rational) (list 1 3/8 3/8 1/8 1/8)]
+             [hit    : (Listof Integer)        (range 0 (random 2 6))]
+             [res    : Move-Execution-Result   '()])
+    (cond [(empty? hit) (reverse res)]
+          [(default-execute-move env #:accuracy (car chance)) => 
+             (lambda (execute-result)
+               (match-define (list move-result) execute-result)
+               (define move-info (cdar execute-result))
 
-  (append (default-execute-move env)
-          hits 
-          (if (empty? misses) '() (take misses 1))))
-      
+               (cond [(attack? move-info) (loop (cdr chance) (cdr hit) (cons move-result res))]
+                     [else (loop chance '() (cons move-result res))]))])))

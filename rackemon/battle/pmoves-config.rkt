@@ -79,8 +79,8 @@
     (define result (execute-bs (construct-battle-env #:player (construct-entity #:chosen-move bullet-seed))))
 
     (test-pred
-      "It hits at least once when accuracy is 100%"
-      (lambda ([l : (Listof Move-Info)]) (>= (length l) 1))
+      "It attempts a hit at least twice when accuracy is 100%"
+      (lambda ([l : (Listof Move-Info)]) (>= (length l) 2))
       result)
     (test-pred
       "It hits at most 5 times"
@@ -98,7 +98,11 @@
       result)
 
     (define result2 (execute-bs (construct-battle-env #:player (construct-entity #:chosen-move bullet-seed)
-                                                      #:enemy (construct-entity #:invulnerable? #t))))
+                                                      #:enemy (construct-entity #:in-air? #t))))
     (test-equal? "It stops upon reaching a miss" result2 '(Missed))
+
+    (define result3 (execute-bs (construct-battle-env #:player (construct-entity #:chosen-move bullet-seed)
+                                                      #:enemy (construct-entity #:fainted? #t))))
+    (test-equal? "It stops upon reaching a failure" result3 '(Failed))
     ))
 

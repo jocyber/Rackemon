@@ -1,10 +1,10 @@
-#lang typed/racket/base
+#lang racket/base
 
 (require "./types.rkt"
          "../combinators.rkt"
          guard)
 
-(: entity-order-by-priority (-> battle-env (Listof entity)))
+; (: entity-order-by-priority (-> battle-env (Listof entity)))
 (define (entity-order-by-priority battle-env)
   (define entity-priority (compose1 pmove-priority entity-chosen-move))
   ; TODO: change to calculated overall speed

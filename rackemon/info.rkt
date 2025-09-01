@@ -10,4 +10,5 @@
   '("base"
     "typed-racket-lib"
     "rackunit-lib"
+    "rackunit-typed"
    ))

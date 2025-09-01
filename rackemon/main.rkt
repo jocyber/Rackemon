@@ -1,7 +1,9 @@
 #lang racket/base
 
 (require (submod "./raylib.rkt" utils)
-         "window.rkt")
+         "window.rkt"
+         "./battle/pmoves-config.rkt"
+         )
 
 (module+ main
   (call-with-window
