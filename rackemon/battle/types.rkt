@@ -3,12 +3,18 @@
 (provide (all-defined-out))
 
 (define-type Move-Category (U 'Physical 'Special 'Status))
-(define-type Move-Execution-Result (U attack status 'Failed 'Missed))
+
+(define-type Move-Info (U attack status 'Failed 'Missed))
+(define-type Execution-Info (Pairof battle-env Move-Info))
+(define-type Move-Execution-Result (Listof Execution-Info))
+
 (define-type Pokemon-Type 
   (U 'Fire 'Water 'Grass 'Electric 'Dragon 'Bug 'Dark 'Steel 'Psychic
      'Ground 'Fairy 'Fighting 'Flying 'Ghost 'Poison 'Rock 'Ice 'Normal))
 (define-type Effectiveness
   (U 'SuperEffective 'NormallyEffective 'NotVeryEffective 'NotEffective))
+(define-type Accuracy (U Exact-Rational +inf.0))
+(define-type Turns (U Positive-Integer (Pairof Positive-Integer Positive-Integer)))
 
 (struct battle-stats
   ([attack          : Integer]
@@ -36,12 +42,14 @@
 
 (struct attack 
   ([damage        : Positive-Integer] 
-   [accuracy      : Nonnegative-Integer] 
+   [accuracy      : Accuracy] 
    [effectiveness : Effectiveness] 
-   [recoil        : Nonnegative-Integer]) #:transparent)
+   [recoil        : Nonnegative-Integer]) 
+  #:transparent)
 (struct status 
   ([stat-diff : battle-stats] 
-   [target    : entity]) #:transparent)
+   [target    : entity]) 
+  #:transparent)
 
 (struct battle-env
   ([enemy         : entity]
@@ -53,12 +61,12 @@
   ([name     : Symbol]
    [bp       : (Option Positive-Integer)]
    [pp       : Positive-Integer]
-   [accuracy : (Option Positive-Integer)]
+   [accuracy : (Option Accuracy)]
    [contact? : Boolean]
    [type     : (Option Pokemon-Type)]
    [category : Move-Category]
    [priority : Integer]
-   [turns    : Positive-Integer]
+   [turns    : Turns]
    [execute  : (battle-env -> Move-Execution-Result)])
   #:transparent)
 
