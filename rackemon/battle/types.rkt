@@ -66,9 +66,13 @@
    [type     : (Option Pokemon-Type)]
    [category : Move-Category]
    [priority : Integer]
-   [turns    : Turns]
-   [execute  : (battle-env -> Move-Execution-Result)])
+   [turns    : Turns])
   #:transparent)
+
+(struct runnable-pmove
+  ([execute        : (-> battle-env Move-Execution-Result)])
+   ; [play-animation : (-> battle-env)])
+   #:transparent)
 
 (: opposing-target (-> battle-env entity))
 (define (opposing-target env)

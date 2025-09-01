@@ -11,6 +11,8 @@
 
 (define animation-time-seconds 5.)
 
+; make a super-struct that contains all the paths used within the cell
+; this will help with dynamically unloading and loading in new textures
 (struct battle-state
    (enemy-frame-offset 
     ))
