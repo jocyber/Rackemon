@@ -104,17 +104,23 @@
 
 (: execute-bullet-seed (-> battle-env Move-Execution-Result))
 (define (execute-bullet-seed env)
-  (let loop ([chance : (Listof Exact-Rational) (list 1 3/8 3/8 1/8 1/8)]
-             [hit    : (Listof Integer)        (range 0 (random 2 6))]
-             [res    : Move-Execution-Result   '()])
-    (cond [(empty? hit) (reverse res)]
-          [(default-execute-move env #:accuracy (car chance)) => 
+  (define percentage (/ (random 0 100) 100))
+  (define hit-count
+    (cond [(and (>= percentage 0)   (< percentage 3/8)) 2]
+          [(and (>= percentage 3/8) (< percentage 6/8)) 3]
+          [(and (>= percentage 6/8) (< percentage 7/8)) 4]
+          [else 5]))
+
+  (let loop ([hits    : Integer               hit-count]
+             [res     : Move-Execution-Result '()])
+    (cond [(zero? hits) (reverse res)]
+          [(default-execute-move env) => 
              (lambda (execute-result)
                (match-define (list move-result) execute-result)
-               (define move-info (cdar execute-result))
+               (define move-info (cdr move-result))
 
-               (cond [(attack? move-info) (loop (cdr chance) (cdr hit) (cons move-result res))]
-                     [else (loop chance '() (cons move-result res))]))])))
+               (cond [(attack? move-info) (loop (sub1 hits) (cons move-result res))]
+                     [else (loop 0 (cons move-result res))]))])))
 
 (module+ test 
   (test-case
