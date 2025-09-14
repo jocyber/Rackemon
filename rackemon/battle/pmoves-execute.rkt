@@ -111,8 +111,8 @@
           [(and (>= percentage 6/8) (< percentage 7/8)) 4]
           [else 5]))
 
-  (let loop ([hits    : Integer               hit-count]
-             [res     : Move-Execution-Result '()])
+  (let loop ([hits : Integer               hit-count]
+             [res  : Move-Execution-Result '()])
     (cond [(zero? hits) (reverse res)]
           [(default-execute-move env) => 
              (lambda (execute-result)
