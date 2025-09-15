@@ -5,7 +5,8 @@
          guard
          (submod "../raylib.rkt" utils)
          (submod "../raylib.rkt" colors)
-         (submod "../raylib.rkt" structs))
+         (submod "../raylib.rkt" structs)
+         "../animations/primitives.rkt")
 
 (provide display-battle)
 
@@ -15,9 +16,14 @@
 ; this will help with dynamically unloading and loading in new textures
 (struct battle-state
    (enemy-frame-offset 
-    ))
+    enemy-position
+    )
+   #:transparent
+   #:mutable)
 
 (define (display-enemy texture width height state)
+  (define position (battle-state-enemy-position state))
+
   ; draw the enemies shadow
   (draw-texture-pro 
     texture 
@@ -29,7 +35,8 @@
   (draw-texture-pro 
     texture 
     (make-rect (battle-state-enemy-frame-offset state) 0. width height) 
-    (make-rect (- window-width 335.) 140. (* width 3.) (* height 3.))
+    ; TODO: move to the glide function
+    (make-rect (vector2d-x position) (vector2d-y position) (* width 3.) (* height 3.))
     (make-vector2 0. 0.) 
     0. WHITE))
 
@@ -56,11 +63,20 @@
 
 (module+ main
   (set-target-fps 60)
+  (define enemy-position (vector2d (- window-width 335.) 140.))
+  (define enemy-glide (glide enemy-position
+                             (vector2d (- window-width 500.) 140.)
+                             3.))
+  (define glide-result (enemy-glide 0.2))
 
   (call-with-window
     window-width window-height window-title
-    (battle-state 0.)
+    (battle-state 0. enemy-position)
     (lambda (dt state background zigzagoon) 
+      (unless (eq? glide-result 'AnimationEnd)
+        (set-battle-state-enemy-position! state (car glide-result))
+        (set! glide-result ((cdr glide-result) dt)))
+
       (display-battle background state dt zigzagoon))
     "resources/battle/backgrounds/grass_background.png"
     "resources/pokemon/front/zigzagoon.png"
