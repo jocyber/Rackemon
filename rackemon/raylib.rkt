@@ -3,33 +3,32 @@
 (require racket/match)
 
 (module structs racket/base
-  (require ffi/unsafe 
-           ffi/unsafe/define)
-
+  (require ffi/unsafe)
   (provide (all-defined-out))
 
   (define-cstruct _image
-    ([data _pointer]
-     [width _int]
-     [height _int]
+    ([data    _pointer]
+     [width   _int]
+     [height  _int]
      [mipmaps _int]
-     [format _int]))
+     [format  _int]))
 
   (define-cstruct _texture2D
-    ([id _uint]
-     [width _int]
-     [height _int]
+    ([id      _uint]
+     [width   _int]
+     [height  _int]
      [mipmaps _int]
-     [format _int]))
+     [format  _int]))
 
   (define-cstruct _rect
-    ([x _float]
-     [y _float]
-     [width _float]
+    ([x      _float]
+     [y      _float]
+     [width  _float]
      [height _float]))
 
   (define-cstruct _color ([r _ubyte] [g _ubyte] [b _ubyte] [a _ubyte]))
-  (define-cstruct _vector2 ([x _float] [y _float])))
+  (define-cstruct _vector2 ([x _float] [y _float]))
+  )
 
 
 (require ffi/unsafe
