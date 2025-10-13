@@ -8,9 +8,9 @@
 
 (provide (all-defined-out))
 
-(struct vector2d ([x : Real] [y : Real]) #:transparent)
-(struct color ([r : Byte] [g : Byte] [b : Byte] [a : Byte]))
-(struct rect ([x : Float] [y : Float] [width : Float] [height : Float]))
+(struct vector2d ([x : Float] [y : Float]) #:transparent)
+(struct color_t ([r : Byte] [g : Byte] [b : Byte] [a : Byte]))
+(struct rect_t ([x : Float] [y : Float] [width : Float] [height : Float]))
 (struct texture2d 
   ([id      : Integer]
    [width   : Integer]
@@ -22,33 +22,33 @@
   ([texture      : texture2d]
    [width-scale  : Positive-Float]
    [height-scale : Positive-Float]
-   [color        : color]
+   [color        : color_t]
    [origin       : vector2d]
    [rotation     : Float]
-   [source       : rect])
+   [source       : rect_t])
   #:prefab)
 
-(: rect->c-rect (-> rect Any))
+(: rect->c-rect (-> rect_t Any))
 (define (rect->c-rect rectangle)
   (make-rect 
-    (rect-x rectangle)
-    (rect-y rectangle)
-    (rect-width rectangle)
-    (rect-height rectangle)))
+    (rect_t-x rectangle)
+    (rect_t-y rectangle)
+    (rect_t-width rectangle)
+    (rect_t-height rectangle)))
 
-(: color->c-color (-> color Any))
+(: color->c-color (-> color_t Any))
 (define (color->c-color c)
   (make-color
-    (color-r c)
-    (color-g c)
-    (color-b c)
-    (color-a c)))
+    (color_t-r c)
+    (color_t-g c)
+    (color_t-b c)
+    (color_t-a c)))
 
 (: vector2d->c-vector2 (-> vector2d Any))
-(define (vector2d->c-vector2 vector2)
+(define (vector2d->c-vector2 v2)
   (make-vector2
-    (vector2d-x vector2)
-    (vector2d-y vector2)))
+    (vector2d-x v2)
+    (vector2d-y v2)))
 
 (: texture2d->c-texture2d (-> texture2d Any))
 (define (texture2d->c-texture2d texture)

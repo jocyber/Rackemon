@@ -7,27 +7,30 @@
          "./types.rkt"
          racket/function
          racket/match)
+; TODO: moved to raylib typed module
+(require/typed "../raylib.rkt"
+               [draw-texture-pro (-> Any Any Any Any Any Any Void)])
 
 (define-type (Animation A) (-> Nonnegative-Float (U (Pair A (Animation A)) 'AnimationEnd)))
 
 ; TODO: make this a macro
-(: execute-glide (-> texture-info vector2d vector2d Positive-Float Void))
-(define (execute-glide texture-info start end seconds)
-  (let loop ([f : (Animation vector2d) (glide start end seconds)])
-    (lambda ([dt : Nonnegative-Real])
-      (match-define (cons position new-f) (f dt))
-
-      (draw-texture-pro 
-        (texture2d->c-texture2d (texture-info-texture texture-info))
-        (rect->c-rect (texture-info-source texture-info))
-        (rect->c-rect
-          (rect (vector2d-x position) (vector2d-y position)
-                (texture-info-width-scale texture-info) (texture-info-height-scale texture-info)))
-        (vector2d->c-vector2 (texture-info-origin texture-info))
-        (texture-info-rotation texture-info)
-        (color->c-color (texture-info-color texture-info)))
-
-      (loop new-f))))
+#| (: execute-glide (-> texture-info vector2d vector2d Positive-Float Void)) |#
+#| (define (execute-glide texture-info start end seconds) |#
+#|   (let loop ([f : (Animation vector2d) (glide start end seconds)]) |#
+#|     (lambda ([dt : Nonnegative-Float]) |#
+#|       (match-define (cons position new-f) (f dt)) |#
+#||#
+#|       (draw-texture-pro  |#
+#|         (texture2d->c-texture2d (texture-info-texture texture-info)) |#
+#|         (rect->c-rect (texture-info-source texture-info)) |#
+#|         (rect->c-rect |#
+#|           (rect (vector2d-x position) (vector2d-y position) |#
+#|                 (texture-info-width-scale texture-info) (texture-info-height-scale texture-info))) |#
+#|         (vector2d->c-vector2 (texture-info-origin texture-info)) |#
+#|         (texture-info-rotation texture-info) |#
+#|         (color->c-color (texture-info-color texture-info))) |#
+#||#
+#|       (loop new-f)))) |#
 
 
 (: square (-> Real Nonnegative-Real))
@@ -40,15 +43,16 @@
     (sqrt (+ (square x-diff) (square y-diff)))))
 
 
-(define-type Execution (-> Nonnegative-Real Void))
+(define-type Execution (-> Nonnegative-Float Void))
+(define-type Animation-Player (U 'AnimationEnd (-> Nonnegative-Float Animation-Player)))
 
-(: play-animation (-> (Listof (Listof Execution)) 
-                      (-> Nonnegative-Real (U Execution 'AnimationEnd))))
+(: play-animation (-> (Listof (Listof Execution)) Animation-Player))
 (define (play-animation animations)
   (if (null? animations)
       'AnimationEnd
-      (lambda ([dt : Nonnegative-Real]) 
-        (define executions (map (curry call-with-values (thunk dt)) (car animations)))
+      (lambda ([dt : Nonnegative-Float]) 
+        (define executions (map (lambda ([f : Execution]) (f dt)) (car animations)))
+
         (if (andmap (curry eq? 'AnimationEnd) executions)
             (play-animation (cdr animations))
             (play-animation animations)))))

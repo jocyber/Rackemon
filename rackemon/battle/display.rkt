@@ -6,7 +6,8 @@
          (submod "../raylib.rkt" utils)
          (submod "../raylib.rkt" colors)
          (submod "../raylib.rkt" structs)
-         "../animations/primitives.rkt")
+         "../animations/primitives.rkt"
+         "../animations/types.rkt")
 
 (provide display-battle)
 
