@@ -17,10 +17,27 @@
 ; this will help with dynamically unloading and loading in new textures
 (struct battle-state
    (enemy-frame-offset 
-    enemy-position
+    animation-state-machine
     )
    #:transparent
    #:mutable)
+
+; move to pmove-animations
+(define tackle
+  `((,(glide (vector2d (- window-width 335.) 140.)
+             (vector2d (- window-width 500.) 140.)
+             1.5))
+    (,(glide (vector2d (- window-width 500.) 140.)
+             (vector2d (- window-width 335.) 140.)
+             1.5))))
+
+(define initial-battle-state
+  (battle-state 
+    0.
+    (make-immutable-hash 
+      `((Attacking . ,tackle))
+      ; should be a function that takes in a battle scene context
+      )))
 
 (define (display-enemy texture width height state)
   (define position (battle-state-enemy-position state))
@@ -64,20 +81,10 @@
 
 (module+ main
   (set-target-fps 60)
-  (define enemy-position (vector2d (- window-width 335.) 140.))
-  (define enemy-glide (glide enemy-position
-                             (vector2d (- window-width 500.) 140.)
-                             3.))
-  (define glide-result (enemy-glide 0.2))
 
   (call-with-window
-    window-width window-height window-title
-    (battle-state 0. enemy-position)
+    window-width window-height window-title initial-battle-state
     (lambda (dt state background zigzagoon) 
-      (unless (eq? glide-result 'AnimationEnd)
-        (set-battle-state-enemy-position! state (car glide-result))
-        (set! glide-result ((cdr glide-result) dt)))
-
       (display-battle background state dt zigzagoon))
     "resources/battle/backgrounds/grass_background.png"
     "resources/pokemon/front/zigzagoon.png"
