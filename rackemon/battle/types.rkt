@@ -1,5 +1,7 @@
 #lang typed/racket/base
 
+(require "../animations/types.rkt")
+
 (provide (all-defined-out))
 
 (define-type Move-Info (U attack status 'Failed 'Missed))
@@ -34,7 +36,8 @@
    [underwater?             : Boolean]
    [vanished?               : Boolean]
    [chosen-move             : (Option pmove)]
-   [move-history            : (Listof pmove)]
+   [move-history            : (Listof pmove)] ; should be a bounded-queue
+   [position                : vector2d]
    [physical-screen-active? : Boolean]
    [special-screen-active?  : Boolean])
   #:mutable
@@ -74,27 +77,32 @@
    ; [play-animation : (-> battle-env)])
    #:transparent)
 
-(: opposing-target (-> battle-env entity))
-(define (opposing-target env)
-  (if (battle-env-players-turn? env) 
-      (battle-env-enemy env) 
-      (battle-env-player env)))
 
-(: current-target (-> battle-env entity))
-(define (current-target env)
-  (if (battle-env-players-turn? env) 
-      (battle-env-player env) 
-      (battle-env-enemy env)))
-
-(: entity-invulnerable? (-> entity Boolean))
-(define (entity-invulnerable? e)
-  (ormap (lambda ([f : (-> entity Boolean)]) (f e))
-         (list entity-in-air? entity-underground? 
-               entity-underwater? entity-vanished?)))
-
-
-(module+ test-utils
+(module+ utils
   (provide (all-defined-out))
+
+  (: enemy-position (-> battle-env Float))
+  (define (enemy-position env) (entity-position (battle-env-enemy env)))
+  (: player-position (-> battle-env Float))
+  (define (player-position env) (entity-position (battle-env-player env)))
+
+  (: opposing-target (-> battle-env entity))
+  (define (opposing-target env)
+    (if (battle-env-players-turn? env) 
+        (battle-env-enemy env) 
+        (battle-env-player env)))
+
+  (: current-target (-> battle-env entity))
+  (define (current-target env)
+    (if (battle-env-players-turn? env) 
+        (battle-env-player env) 
+        (battle-env-enemy env)))
+
+  (: entity-invulnerable? (-> entity Boolean))
+  (define (entity-invulnerable? e)
+    (ormap (lambda ([f : (-> entity Boolean)]) (f e))
+           (list entity-in-air? entity-underground? 
+                 entity-underwater? entity-vanished?)))
 
   (define (construct-entity 
             #:attacked? [attacked? : Boolean #f]
@@ -106,11 +114,16 @@
             #:vanished? [vanished? : Boolean #f]
             #:chosen-move [chosen-move : (Option pmove) #f]
             #:move-history [move-history : (Listof pmove) '()]
+            #:position [position : vector2d (vector2d 0. 0.)]
             #:physical-screen-active? [physical-screen-active? : Boolean #f]
             #:special-screen-active? [special-screen-active? : Boolean #f])
-    (entity attacked? stats 
+    (entity attacked? 
+            stats 
             fainted? in-air? underground? underwater? vanished? 
-            chosen-move move-history physical-screen-active? special-screen-active?))
+            chosen-move move-history 
+            position
+            physical-screen-active? 
+            special-screen-active?))
 
   (define (construct-battle-env 
             #:enemy [enemy : entity (construct-entity)]

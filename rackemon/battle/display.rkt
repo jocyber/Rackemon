@@ -13,16 +13,8 @@
 
 (define animation-time-seconds 5.)
 
-; make a super-struct that contains all the paths used within the cell
-; this will help with dynamically unloading and loading in new textures
-(struct battle-state
-   (enemy-frame-offset 
-    animation-state-machine
-    )
-   #:transparent
-   #:mutable)
-
 ; move to pmove-animations
+; create union type of parameterized animation types and pattern match on them
 (define tackle
   `((,(glide (vector2d (- window-width 335.) 140.)
              (vector2d (- window-width 500.) 140.)
@@ -31,15 +23,9 @@
              (vector2d (- window-width 335.) 140.)
              1.5))))
 
-(define initial-battle-state
-  (battle-state 
-    0.
-    (make-immutable-hash 
-      `((Attacking . ,tackle))
-      ; should be a function that takes in a battle scene context
-      )))
-
-(define (display-enemy texture width height state)
+; move texture-info to entity
+(define (draw-entity entity texture-info state)
+  ; get position from entity
   (define position (battle-state-enemy-position state))
 
   ; draw the enemies shadow
@@ -62,6 +48,7 @@
   (define num-frames 112)
   (define width 58.)
   (define height 42.)
+  ; animation-time-seconds should be property of move animation
   (define expected-dt (/ animation-time-seconds num-frames))
 
   (draw-texture-ex background (make-vector2 0. 0.) 0. 4. WHITE)
@@ -79,12 +66,15 @@
   (display-enemy enemy width height new-state)
   (values new-dt new-state))
 
+
 (module+ main
   (set-target-fps 60)
 
   (call-with-window
     window-width window-height window-title initial-battle-state
     (lambda (dt state background zigzagoon) 
+      (match-define ())
+      (set-battle-state-enemy-position! state )
       (display-battle background state dt zigzagoon))
     "resources/battle/backgrounds/grass_background.png"
     "resources/pokemon/front/zigzagoon.png"
