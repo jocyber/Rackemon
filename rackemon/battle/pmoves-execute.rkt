@@ -1,6 +1,7 @@
 #lang typed/racket/base
 
 (require "./types.rkt"
+         (submod "./types.rkt" utils)
          guard 
          racket/bool 
          racket/list
@@ -13,8 +14,7 @@
   (require typed/rackunit
            racket/math
            racket/function
-           "./pmoves-config.rkt"
-           (submod "./types.rkt" test-utils))
+           "./pmoves-config.rkt")
 
   (define ((execute-move [f : (-> battle-env Move-Execution-Result)]) [env : battle-env]) : Move-Info 
     (cdar (f env)))

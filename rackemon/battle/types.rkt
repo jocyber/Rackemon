@@ -38,6 +38,7 @@
    [chosen-move             : (Option pmove)]
    [move-history            : (Listof pmove)] ; should be a bounded-queue
    [position                : vector2d]
+   [frame-offset            : Nonnegative-Float]
    [physical-screen-active? : Boolean]
    [special-screen-active?  : Boolean])
   #:mutable
@@ -81,9 +82,9 @@
 (module+ utils
   (provide (all-defined-out))
 
-  (: enemy-position (-> battle-env Float))
+  (: enemy-position (-> battle-env vector2d))
   (define (enemy-position env) (entity-position (battle-env-enemy env)))
-  (: player-position (-> battle-env Float))
+  (: player-position (-> battle-env vector2d))
   (define (player-position env) (entity-position (battle-env-player env)))
 
   (: opposing-target (-> battle-env entity))
@@ -115,15 +116,15 @@
             #:chosen-move [chosen-move : (Option pmove) #f]
             #:move-history [move-history : (Listof pmove) '()]
             #:position [position : vector2d (vector2d 0. 0.)]
+            #:frame-offset [frame-offset : Nonnegative-Float 0.]
             #:physical-screen-active? [physical-screen-active? : Boolean #f]
             #:special-screen-active? [special-screen-active? : Boolean #f])
     (entity attacked? 
             stats 
             fainted? in-air? underground? underwater? vanished? 
             chosen-move move-history 
-            position
-            physical-screen-active? 
-            special-screen-active?))
+            position frame-offset
+            physical-screen-active? special-screen-active?))
 
   (define (construct-battle-env 
             #:enemy [enemy : entity (construct-entity)]

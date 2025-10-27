@@ -1,5 +1,6 @@
 #lang typed/racket/base
 
+; everything here needs to be moved to a typed raylib module
 (require/typed (submod "../raylib.rkt" structs)
                [make-rect (-> Float Float Float Float Any)]
                [make-color (-> Byte Byte Byte Byte Any)]
@@ -28,6 +29,7 @@
    [source       : rect_t])
   #:prefab)
 
+; TODO: make into macros
 (: rect->c-rect (-> rect_t Any))
 (define (rect->c-rect rectangle)
   (make-rect 

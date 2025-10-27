@@ -2,10 +2,9 @@
 
 (provide (all-defined-out))
 
-(require "../propositions.rkt"
+(require "../math-utils.rkt"
          "../raylib.rkt"
          "./types.rkt"
-         "../math-utils.rkt"
          racket/function
          racket/match)
 

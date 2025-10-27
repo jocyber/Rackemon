@@ -7,75 +7,76 @@
          (submod "../raylib.rkt" colors)
          (submod "../raylib.rkt" structs)
          "../animations/primitives.rkt"
-         "../animations/types.rkt")
+         "../animations/types.rkt"
+         "./types.rkt"
+         (submod "./types.rkt" utils))
 
 (provide display-battle)
 
 (define animation-time-seconds 5.)
-
-; move to pmove-animations
-; create union type of parameterized animation types and pattern match on them
-(define tackle
-  `((,(glide (vector2d (- window-width 335.) 140.)
-             (vector2d (- window-width 500.) 140.)
-             1.5))
-    (,(glide (vector2d (- window-width 500.) 140.)
-             (vector2d (- window-width 335.) 140.)
-             1.5))))
+(define origin (make-vector2 0. 0.))
 
 ; move texture-info to entity
-(define (draw-entity entity texture-info state)
-  ; get position from entity
-  (define position (battle-state-enemy-position state))
+(define (draw-entity env entity texture-info width height)
+  ; (define texture (texture2d->c-texture2d texture-info))
+  (define source (make-rect (entity-frame-offset entity) 0. width height))
+  (define x (vector2d-x (entity-position entity)))
+  (define y (vector2d-y (entity-position entity)))
 
-  ; draw the enemies shadow
-  (draw-texture-pro 
-    texture 
-    (make-rect (battle-state-enemy-frame-offset state) 0. width height) 
-    (make-rect (- window-width 335.) 200. (* width 3.) (* height 1.5))
-    (make-vector2 0. 0.) 
-    0. (make-color 0 0 0 110))
-  ; draw enemy animation
-  (draw-texture-pro 
-    texture 
-    (make-rect (battle-state-enemy-frame-offset state) 0. width height) 
-    ; TODO: move to the glide function
-    (make-rect (vector2d-x position) (vector2d-y position) (* width 3.) (* height 3.))
-    (make-vector2 0. 0.) 
-    0. WHITE))
+  (unless (battle-env-players-turn? env)
+    ; draw shadow
+    (draw-texture-pro 
+      texture-info source 
+      (make-rect x (+ y 62.) (* width 3.) (* height 1.5))
+      origin 0. 
+      (make-color 0 0 0 110)))
 
-(define (display-battle background state dt enemy) ; TODO: get enemy and player from battle-env
+  (draw-texture-pro 
+    texture-info source (make-rect x y (* width 3.) (* height 3.)) origin 0. WHITE))
+
+(define (display-battle background env dt enemy)
   (define num-frames 112)
   (define width 58.)
   (define height 42.)
-  ; animation-time-seconds should be property of move animation
+  ; animation-time-seconds should be a property of the move animation
   (define expected-dt (/ animation-time-seconds num-frames))
 
-  (draw-texture-ex background (make-vector2 0. 0.) 0. 4. WHITE)
+  (draw-texture-ex background origin 0. 4. WHITE)
 
-  (define-values (new-dt new-state)
+  (define-values (new-dt new-env)
     (guarded-block
-      (guard (>= dt expected-dt) #:else (values dt state))
+      (guard (>= dt expected-dt) #:else (values dt env))
 
       (values
         (- dt expected-dt)
-        (struct-copy battle-state state 
-                     [enemy-frame-offset (+ (battle-state-enemy-frame-offset state) width)]))
+        (let ([enemy-entity (battle-env-enemy env)])
+          (struct-copy battle-env env 
+                       [enemy 
+                         (struct-copy 
+                           entity enemy-entity
+                           [frame-offset (+ (entity-frame-offset enemy-entity) width)])])))
       ))
 
-  (display-enemy enemy width height new-state)
-  (values new-dt new-state))
+  (draw-entity new-env (battle-env-enemy env) enemy width height)
+  ; state monad :|
+  (values new-dt new-env))
 
 
 (module+ main
   (set-target-fps 60)
 
+  (define initial-env 
+    (construct-battle-env 
+      #:players-turn? #f 
+      #:enemy 
+        (construct-entity
+          #:position (vector2d (- window-width 335.) 145.)
+          )))
+
   (call-with-window
-    window-width window-height window-title initial-battle-state
-    (lambda (dt state background zigzagoon) 
-      (match-define ())
-      (set-battle-state-enemy-position! state )
-      (display-battle background state dt zigzagoon))
+    window-width window-height window-title initial-env
+    (lambda (dt env background zigzagoon) 
+      (display-battle background env dt zigzagoon))
     "resources/battle/backgrounds/grass_background.png"
     "resources/pokemon/front/zigzagoon.png"
     )

@@ -1,13 +1,15 @@
 #lang typed/racket/base
 
+(require "./animations/types.rkt")
+
 (provide (all-defined-out))
 
 (: nonnegative? (-> Real Boolean : #:+ Nonnegative-Real))
 (define (nonnegative? n) (>= n 0))
 
-
 (: square (-> Real Nonnegative-Real))
 (define (square x) (assert (* x x) nonnegative?))
+
 
 (: compute-distance (-> vector2d vector2d Nonnegative-Real))
 (define (compute-distance start end)
