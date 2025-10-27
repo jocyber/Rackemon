@@ -12,7 +12,7 @@
 (require/typed "../raylib.rkt"
                [draw-texture-pro (-> Any Any Any Any Any Any Void)])
 
-(define-type (Animation A) (-> Nonnegative-Float (U (Pair A (Animation A)) 'AnimationEnd)))
+(define-type (Animation A) (U 'AnimationEnd (-> Nonnegative-Float (Pair A (Animation A)))))
 (define-type (Animations-List A) (Listof (Listof (Animation A))))
 
 ; https://play.haskell.org/saved/ubD3mGDl 
@@ -22,7 +22,7 @@
   (cond [(eq? animation 'AnimationEnd) 'AnimationEnd]
         [else (match-define (cons val new-animation) animation)
               (lambda ([dt : Nonnegative-Float]) 
-                (cons (f val) (animation-map f (new-animation dt))))]))
+                (cons (f val) (animation-map (new-animation dt) f)))]))
 
 (: glide (-> vector2d vector2d Positive-Float (Animation vector2d)))
 (define (glide start end seconds)
