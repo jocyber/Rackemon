@@ -17,6 +17,7 @@
 
 (define-type Accuracy (U Exact-Rational +inf.0))
 (define-type Turns (U Positive-Integer (Pairof Positive-Integer Positive-Integer)))
+(define-type Entity-Flag (U 'Player 'Enemy))
 
 (struct battle-stats
   ([attack          : Integer]
@@ -28,7 +29,8 @@
   #:transparent)
 
 (struct entity
-  ([attacked?               : Boolean]
+  ([flag                    : Entity-Flag]
+   [attacked?               : Boolean]
    [stats                   : battle-stats]
    [fainted?                : Boolean]
    [in-air?                 : Boolean]
@@ -106,6 +108,7 @@
                  entity-underwater? entity-vanished?)))
 
   (define (construct-entity 
+            #:flag [flag : Entity-Flag 'Player]
             #:attacked? [attacked? : Boolean #f]
             #:stats [stats : battle-stats (battle-stats 0 0 0 0 0)]
             #:fainted? [fainted? : Boolean #f]
@@ -119,7 +122,8 @@
             #:frame-offset [frame-offset : Nonnegative-Float 0.]
             #:physical-screen-active? [physical-screen-active? : Boolean #f]
             #:special-screen-active? [special-screen-active? : Boolean #f])
-    (entity attacked? 
+    (entity flag 
+            attacked? 
             stats 
             fainted? in-air? underground? underwater? vanished? 
             chosen-move move-history 
@@ -127,8 +131,8 @@
             physical-screen-active? special-screen-active?))
 
   (define (construct-battle-env 
-            #:enemy [enemy : entity (construct-entity)]
-            #:player [player : entity (construct-entity)]
+            #:enemy [enemy : entity (construct-entity #:flag 'Enemy)]
+            #:player [player : entity (construct-entity #:flag 'Player)]
             #:players-turn? [players-turn? : Boolean #t])
     (battle-env enemy player players-turn?)))
 

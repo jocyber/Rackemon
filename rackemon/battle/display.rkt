@@ -23,7 +23,7 @@
   (define x (vector2d-x (entity-position entity)))
   (define y (vector2d-y (entity-position entity)))
 
-  (unless (battle-env-players-turn? env)
+  (when (eq? (entity-flag entity) 'Enemy)
     ; draw shadow
     (draw-texture-pro 
       texture-info source 
@@ -70,6 +70,7 @@
       #:players-turn? #f 
       #:enemy 
         (construct-entity
+          #:flag 'Enemy
           #:position (vector2d (- window-width 335.) 145.)
           )))
 
