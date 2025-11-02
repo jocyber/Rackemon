@@ -21,7 +21,6 @@
 
 ; move texture-info to entity
 (define (draw-entity env entity texture-info width height)
-  ; (define texture (texture2d->c-texture2d texture-info))
   (define source (make-rect (entity-frame-offset entity) 0. width height))
   (define x (vector2d-x (entity-position entity)))
   (define y (vector2d-y (entity-position entity)))
@@ -29,8 +28,8 @@
   (when (eq? (entity-flag entity) 'Enemy)
     ; draw shadow
     (draw-texture-pro 
-      texture-info source 
-      (make-rect x (+ y 62.) (* width 3.) (* height 1.5))
+      texture-info 
+      source (make-rect x (+ y 62.) (* width 3.) (* height 1.5))
       origin 0. 
       (make-color 0 0 0 110)))
 
@@ -45,23 +44,18 @@
   (define expected-dt (/ animation-time-seconds num-frames))
 
   (draw-texture-ex background origin 0. 4. WHITE)
+  (define enemy-entity (battle-env-enemy env))
 
-  (define-values (new-dt new-env)
+  (define new-dt
     (guarded-block
-      (guard (>= dt expected-dt) #:else (values dt env))
+      (guard (>= dt expected-dt) #:else dt)
 
-      (values
-        (- dt expected-dt)
-        (let ([enemy-entity (battle-env-enemy env)])
-          (struct-copy battle-env env 
-                       [enemy 
-                         (struct-copy 
-                           entity enemy-entity
-                           [frame-offset (+ (entity-frame-offset enemy-entity) width)])])))
+      (set-entity-frame-offset! enemy-entity (+ (entity-frame-offset enemy-entity) width))
+      (- dt expected-dt)
       ))
 
-  (draw-entity new-env (battle-env-enemy env) enemy width height)
-  (values new-dt new-env))
+  (draw-entity env enemy-entity enemy width height)
+  (values new-dt env))
 
 (define player%
   (class object%
@@ -97,8 +91,6 @@
           #:position (vector2d (- window-width 335.) 145.)
           )))
 
-  ; maybe switch back to immutable state and have animation player perform a fold
-  ; on the animations. Take ideas from the state monad.
   (define @tackle (new player% [animations (tackle! initial-env)]))
 
   (call-with-window

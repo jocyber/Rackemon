@@ -60,11 +60,7 @@
     ['macosx (path->string (build-path (getenv "HOMEBREW_CELLAR") "raylib" "5.5" "lib" "libraylib"))]
     [_ (error "Platform is not supported")]))
 
-(define (raylib-path)
-  (or (getenv "RAYLIB_PATH") 
-      (let ([path (default-path)])
-        (displayln (format "RAYLIB_PATH environment variable is not defined. Defaulting to ~a" path))
-        path)))
+(define (raylib-path) (or (getenv "RAYLIB_PATH") (default-path)))
 
 (define-ffi-definer 
   define-raylib 
