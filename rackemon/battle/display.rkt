@@ -2,6 +2,7 @@
 
 (require "../raylib.rkt"
          "../window.rkt"
+         "./pmoves-animations.rkt"
          guard
          (submod "../raylib.rkt" utils)
          (submod "../raylib.rkt" colors)
@@ -9,6 +10,8 @@
          "../animations/primitives.rkt"
          "../animations/types.rkt"
          "./types.rkt"
+         racket/match 
+         racket/class
          (submod "./types.rkt" utils))
 
 (provide display-battle)
@@ -58,8 +61,28 @@
       ))
 
   (draw-entity new-env (battle-env-enemy env) enemy width height)
-  ; state monad :|
   (values new-dt new-env))
+
+(define player%
+  (class object%
+    (super-new)
+
+    (init-field animations)
+
+    (define/public (@play dt)
+      (define (@update a)
+        (cond [(eq? a 'AnimationEnd) 'AnimationEnd]
+              [else (match-define (cons _ @new) (a dt))
+                    @new]))
+
+      (cond [(null? animations) 'AnimationEnd]
+            [else 
+              (define results (map @update (car animations)))
+
+              (if (andmap (lambda (a) (eq? a 'AnimationEnd)) results)
+                  (set! animations (cdr animations))
+                  (set! animations (cons results (cdr animations))))]))
+    ))
 
 
 (module+ main
@@ -74,9 +97,14 @@
           #:position (vector2d (- window-width 335.) 145.)
           )))
 
+  ; maybe switch back to immutable state and have animation player perform a fold
+  ; on the animations. Take ideas from the state monad.
+  (define @tackle (new player% [animations (tackle! initial-env)]))
+
   (call-with-window
     window-width window-height window-title initial-env
     (lambda (dt env background zigzagoon) 
+      (send @tackle @play dt)
       (display-battle background env dt zigzagoon))
     "resources/battle/backgrounds/grass_background.png"
     "resources/pokemon/front/zigzagoon.png"

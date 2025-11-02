@@ -3,26 +3,21 @@
 (provide (all-defined-out))
 
 (require "../math-utils.rkt"
-         "../raylib.rkt"
          "./types.rkt"
-         racket/function
          racket/match)
-
-; TODO: moved to raylib typed module
-(require/typed "../raylib.rkt"
-               [draw-texture-pro (-> Any Any Any Any Any Any Void)])
 
 (define-type (Animation A) (U 'AnimationEnd (-> Nonnegative-Float (Pair A (Animation A)))))
 (define-type (Animations-List A) (Listof (Listof (Animation A))))
 
-; https://play.haskell.org/saved/ubD3mGDl 
-; we take advantage of the fact that an animation is a functor
-(: animation-map (All (A B) (-> (Animation A) (-> A B) (Animation B))))
-(define (animation-map animation f)
+(: @on-update (All (A) (-> (-> A Void) (Animation A) (Animation Void))))
+(define (@on-update f animation)
   (cond [(eq? animation 'AnimationEnd) 'AnimationEnd]
-        [else (match-define (cons val new-animation) animation)
-              (lambda ([dt : Nonnegative-Float]) 
-                (cons (f val) (animation-map (new-animation dt) f)))]))
+        [else 
+          (lambda ([dt : Nonnegative-Float])
+            (match-define (cons val-a @new) (animation dt))
+            (f val-a)
+            (cons (void) (@on-update f @new)))]))
+
 
 (: glide (-> vector2d vector2d Positive-Float (Animation vector2d)))
 (define (glide start end seconds)
@@ -30,21 +25,21 @@
   (define dy-rate (/ (- (vector2d-y end) (vector2d-y start)) seconds))
   (define total-distance (compute-distance start end))
   
-  (let loop ([pos               : vector2d start] 
+  (let loop ([pos start]
              [distance-traveled : Nonnegative-Real 0])
-    (lambda ([dt : Nonnegative-Float])
-      (cond [(>= distance-traveled total-distance) 'AnimationEnd]
-            [else (let* ([new-pos : vector2d 
-                            (vector2d (+ (vector2d-x pos) (* dx-rate dt))
-                                      (+ (vector2d-y pos) (* dy-rate dt)))]
+    (cond [(>= distance-traveled total-distance) 'AnimationEnd]
+          [else (lambda ([dt : Nonnegative-Float])
+                  (let* ([new-pos : vector2d 
+                          (vector2d (+ (vector2d-x pos) (* dx-rate dt))
+                                    (+ (vector2d-y pos) (* dy-rate dt)))]
                          [distance (compute-distance start new-pos)])
-                    (cons (if (> distance total-distance) end pos)
-                          (loop new-pos distance)))]))))
+                      (cons (if (>= distance total-distance) end pos)
+                            (loop new-pos distance))))])))
 
 (: wait (-> Positive-Float (Animation Void)))
 (define (wait seconds)
   (let loop ([time-left : Float seconds])
-    (lambda ([dt : Nonnegative-Float])
-      (cond [(seconds . <= . 0) 'AnimationEnd]
-            [else (cons (void) (loop (- seconds dt)))]))))
+    (cond [(seconds . <= . 0) 'AnimationEnd]
+          [else (lambda ([dt : Nonnegative-Float])
+                  (cons (void) (loop (- seconds dt))))])))
 
