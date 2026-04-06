@@ -4,7 +4,8 @@
 
 (require "../math-utils.rkt"
          "./types.rkt"
-         racket/match)
+         racket/match
+         )
 
 (define-type (Animation A) (U 'AnimationEnd (-> Nonnegative-Float (Pair A (Animation A)))))
 (define-type (Animations-List A) (Listof (Listof (Animation A))))
@@ -25,8 +26,7 @@
   (define dy-rate (/ (- (vector2d-y end) (vector2d-y start)) seconds))
   (define total-distance (compute-distance start end))
   
-  (let loop ([pos start]
-             [distance-traveled : Nonnegative-Real 0])
+  (let loop ([pos start] [distance-traveled : Nonnegative-Real 0])
     (cond [(>= distance-traveled total-distance) 'AnimationEnd]
           [else (lambda ([dt : Nonnegative-Float])
                   (let* ([new-pos : vector2d 

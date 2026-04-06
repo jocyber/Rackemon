@@ -14,7 +14,7 @@
 (: tackle! (-> battle-env Move-Animation))
 (define (tackle! env)
   (define distance 75.)
-  (define seconds .90)
+  (define seconds .30)
   
   (: get-animation (-> Update-Pos vector2d vector2d Move-Animation))
   (define (get-animation update-pos! start-position end-position)

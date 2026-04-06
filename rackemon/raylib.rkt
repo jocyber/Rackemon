@@ -103,14 +103,14 @@
     (init-window width height title)
     (define textures (map load-sprite paths))
 
-    (let loop ([state initial-state] [dt (get-frame-time)])
+    (let loop ([state initial-state])
       (unless (window-should-close?)
         (begin-drawing)
 
-        (define-values (new-dt new-state) (apply f dt state textures))
+        (define new-state (apply f (get-frame-time) state textures))
 
         (end-drawing)
-        (loop new-state (+ new-dt (get-frame-time)))))
+        (loop new-state)))
 
     (for-each unload-texture textures)
     (close-window))

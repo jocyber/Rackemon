@@ -1,6 +1,7 @@
 #lang typed/racket/base
 
-(require "../animations/types.rkt")
+(require "../animations/types.rkt"
+         "../types.rkt")
 
 (provide (all-defined-out))
 
@@ -9,9 +10,6 @@
 (define-type Move-Execution-Result (Listof Execution-Info))
 
 (define-type Move-Category (U 'Physical 'Special 'Status))
-(define-type Pokemon-Type 
-  (U 'Fire 'Water 'Grass 'Electric 'Dragon 'Bug 'Dark 'Steel 'Psychic
-     'Ground 'Fairy 'Fighting 'Flying 'Ghost 'Poison 'Rock 'Ice 'Normal))
 (define-type Effectiveness
   (U 'SuperEffective 'NormallyEffective 'NotVeryEffective 'NotEffective))
 
