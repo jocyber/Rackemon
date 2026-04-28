@@ -32,7 +32,7 @@
 
 
 (require ffi/unsafe
-         ffi/unsafe/define 
+         ffi/unsafe/define
          'structs)
 
 ; provides a safe interface for the Raylib library
@@ -56,24 +56,24 @@
 
 (define (default-path)
   (match (system-type 'os)
-    ['unix "/usr/local/lib/raylib/src/libraylib"]
+    ['unix "/usr/local/lib/raylib/lib/libraylib"]
     ['macosx (path->string (build-path (getenv "HOMEBREW_CELLAR") "raylib" "5.5" "lib" "libraylib"))]
     [_ (error "Platform is not supported")]))
 
 (define (raylib-path) (or (getenv "RAYLIB_PATH") (default-path)))
 
-(define-ffi-definer 
-  define-raylib 
+(define-ffi-definer
+  define-raylib
   (let ([path (raylib-path)])
     (with-handlers ([exn:fail?
-                      (lambda (e) 
-                        (raise-user-error 
+                      (lambda (e)
+                        (raise-user-error
                           (format "Raylib library not found at location: ~a" path)))])
       (ffi-lib path))))
 
 (define-raylib InitWindow (_fun _int _int _string -> _void))
 (define-raylib CloseWindow (_fun -> _void))
-(define-raylib WindowShouldClose (_fun -> _stdbool)) 
+(define-raylib WindowShouldClose (_fun -> _stdbool))
 (define-raylib BeginDrawing (_fun -> _void))
 (define-raylib EndDrawing (_fun -> _void))
 (define-raylib GetFrameTime (_fun -> _float))
@@ -120,4 +120,3 @@
            [texture (load-texture-from-image image)])
       (unload-image image)
       texture)))
-

@@ -1,6 +1,8 @@
 #lang typed/racket/base
 
 (require "../animations/types.rkt"
+         "../pokemon/config.rkt"
+         "../pokemon/types.rkt"
          "../types.rkt")
 
 (provide (all-defined-out))
@@ -17,6 +19,16 @@
 (define-type Turns (U Positive-Integer (Pairof Positive-Integer Positive-Integer)))
 (define-type Entity-Flag (U 'Player 'Enemy))
 
+(struct battle-env
+  ([enemy         : entity]
+   [player        : entity]
+   [players-turn? : Boolean]
+   [player-dt     : Nonnegative-Float]
+   [enemy-dt      : Nonnegative-Float]
+   )
+  #:transparent
+  )
+
 (struct battle-stats
   ([attack          : Integer]
    [defense         : Integer]
@@ -27,7 +39,8 @@
   #:transparent)
 
 (struct entity
-  ([flag                    : Entity-Flag]
+  ([pokemon                 : pokemon-instance]
+   [flag                    : Entity-Flag]
    [attacked?               : Boolean]
    [stats                   : battle-stats]
    [fainted?                : Boolean]
@@ -44,22 +57,16 @@
   #:mutable
   #:transparent)
 
-(struct attack 
-  ([damage        : Positive-Integer] 
-   [accuracy      : Accuracy] 
-   [effectiveness : Effectiveness] 
-   [recoil        : Nonnegative-Integer]) 
+(struct attack
+  ([damage        : Positive-Integer]
+   [accuracy      : Accuracy]
+   [effectiveness : Effectiveness]
+   [recoil        : Nonnegative-Integer])
   #:transparent)
-(struct status 
-  ([stat-diff : battle-stats] 
-   [target    : entity]) 
+(struct status
+  ([stat-diff : battle-stats]
+   [target    : entity])
   #:transparent)
-
-(struct battle-env
-  ([enemy         : entity]
-   [player        : entity]
-   [players-turn? : Boolean])
-   #:mutable)
 
 (struct pmove
   ([name     : Symbol]
@@ -89,23 +96,24 @@
 
   (: opposing-target (-> battle-env entity))
   (define (opposing-target env)
-    (if (battle-env-players-turn? env) 
-        (battle-env-enemy env) 
+    (if (battle-env-players-turn? env)
+        (battle-env-enemy env)
         (battle-env-player env)))
 
   (: current-target (-> battle-env entity))
   (define (current-target env)
-    (if (battle-env-players-turn? env) 
-        (battle-env-player env) 
+    (if (battle-env-players-turn? env)
+        (battle-env-player env)
         (battle-env-enemy env)))
 
   (: entity-invulnerable? (-> entity Boolean))
   (define (entity-invulnerable? e)
     (ormap (lambda ([f : (-> entity Boolean)]) (f e))
-           (list entity-in-air? entity-underground? 
+           (list entity-in-air? entity-underground?
                  entity-underwater? entity-vanished?)))
 
-  (define (construct-entity 
+  (define (construct-entity
+            #:pokemon (pokemon : pokemon piplup)
             #:flag [flag : Entity-Flag 'Player]
             #:attacked? [attacked? : Boolean #f]
             #:stats [stats : battle-stats (battle-stats 0 0 0 0 0)]
@@ -120,17 +128,22 @@
             #:frame-offset [frame-offset : Nonnegative-Float 0.]
             #:physical-screen-active? [physical-screen-active? : Boolean #f]
             #:special-screen-active? [special-screen-active? : Boolean #f])
-    (entity flag 
-            attacked? 
-            stats 
-            fainted? in-air? underground? underwater? vanished? 
-            chosen-move move-history 
+    (entity (pokemon-instance piplup)
+            flag
+            attacked?
+            stats
+            fainted? in-air? underground? underwater? vanished?
+            chosen-move move-history
             position frame-offset
-            physical-screen-active? special-screen-active?))
+            physical-screen-active? special-screen-active?
+            ))
 
-  (define (construct-battle-env 
+  (define (construct-battle-env
             #:enemy [enemy : entity (construct-entity #:flag 'Enemy)]
             #:player [player : entity (construct-entity #:flag 'Player)]
-            #:players-turn? [players-turn? : Boolean #t])
-    (battle-env enemy player players-turn?)))
-
+            #:players-turn? [players-turn? : Boolean #t]
+            #:player-dt [player-dt : Nonnegative-Float 0.]
+            #:enemy-dt [enemy-dt : Nonnegative-Float 0.]
+            )
+    (battle-env enemy player players-turn? player-dt enemy-dt))
+  )
