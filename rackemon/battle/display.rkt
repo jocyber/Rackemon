@@ -19,26 +19,26 @@
 (define idle-animation-seconds 5.5)
 (define origin (make-vector2 0. 0.))
 
-(define (display-battle! env dt background player enemy)
-  ; helpers
-  (define (draw-entity! entity texture-info width height player?)
-    (define multiplier (if player? 5. 3.))
-    (define source (make-rect (entity-frame-offset entity) 0. width height))
-    (define x (vector2d-x (entity-position entity)))
-    (define y (vector2d-y (entity-position entity)))
+(define (draw-entity! entity texture-info width height player?)
+  (define multiplier (if player? 5. 3.))
+  (define source (make-rect (entity-frame-offset entity) 0. width height))
+  (define x (vector2d-x (entity-position entity)))
+  (define y (vector2d-y (entity-position entity)))
 
-    (when (eq? (entity-flag entity) 'Enemy)
-      ; draw shadow
-      (draw-texture-pro
-        texture-info
-        source (make-rect x (+ y 62.) (* width multiplier) (/ (* height multiplier) 2.))
-        origin 0.
-        (make-color 0 0 0 110)))
-
+  (when (not player?)
+    ; draw shadow
     (draw-texture-pro
-      texture-info source (make-rect x y (* width multiplier) (* height multiplier)) origin 0. WHITE)
-    )
+      texture-info
+      source (make-rect x (+ y 62.) (* width multiplier) (/ (* height multiplier) 2.))
+      origin 0.
+      (make-color 0 0 0 110)))
 
+  (draw-texture-pro
+    texture-info source (make-rect x y (* width multiplier) (* height multiplier)) origin 0. WHITE)
+  )
+
+(define (display-battle! env dt background player-texture enemy-texture)
+  ; helpers
   (draw-texture-ex background origin 0. 4. WHITE)
 
   (define enemy-entity (battle-env-enemy env))
@@ -69,8 +69,8 @@
            (- player-dt player-expected-dt)]
           [else player-dt]))
 
-  (draw-entity! player-entity player player-width player-height #t)
-  (draw-entity! enemy-entity enemy enemy-width enemy-height #f)
+  (draw-entity! player-entity player-texture player-width player-height #t)
+  (draw-entity! enemy-entity enemy-texture enemy-width enemy-height #f)
 
   (struct-copy battle-env env [player-dt new-player-dt] [enemy-dt new-enemy-dt]))
 
@@ -94,13 +94,10 @@
           #:position (vector2d 150. 270.)
           )))
 
-  (define @tackle (new AnimationPlayer% [animations (tackle! initial-env)]))
-
   (call-with-window
     window-width window-height window-title initial-env
-    (lambda (dt env background zigzagoon piplup)
-      (send @tackle @play dt)
-      (display-battle! env dt background piplup zigzagoon)
+    (lambda (dt env background zig pip)
+      (display-battle! env dt background pip zig)
       )
     "resources/battle/backgrounds/grass_background.png"
     (pokemon-front-resource-path (pokemon-name zigzagoon))

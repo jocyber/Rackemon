@@ -23,8 +23,8 @@
   ([enemy         : entity]
    [player        : entity]
    [players-turn? : Boolean]
-   [player-dt     : Nonnegative-Float]
    [enemy-dt      : Nonnegative-Float]
+   [player-dt     : Nonnegative-Float]
    )
   #:transparent
   )
@@ -128,7 +128,7 @@
             #:frame-offset [frame-offset : Nonnegative-Float 0.]
             #:physical-screen-active? [physical-screen-active? : Boolean #f]
             #:special-screen-active? [special-screen-active? : Boolean #f])
-    (entity (pokemon-instance piplup)
+    (entity (pokemon-instance pokemon)
             flag
             attacked?
             stats
